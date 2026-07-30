@@ -228,55 +228,64 @@ export class TimeCircuitsCard extends LitElement {
     editable?: boolean,
   ): TemplateResult {
     const color = this._rowColor(kind, theme);
+    const p = row.parsed;
+    const md = row.displayMD ?? p?.monthDay;
+    const click = editable ? () => this._editRow(entityId, row.label) : undefined;
     return html`
       <div class="row">
-        <div class="row-label" style="color:${theme.label_color}">${row.label}</div>
-        <div class="segments">
-          ${row.parsed
-            ? html`
-                <div
-                  class="seg-group ${editable ? "editable" : ""}"
-                  @click=${() => editable && this._editRow(entityId, row.label)}
-                >
-                  ${this._renderSegment(row.displayMD ?? row.parsed.monthDay, color, false)}
-                </div>
-                <div
-                  class="seg-group ${editable ? "editable" : ""}"
-                  @click=${() => editable && this._editRow(entityId, row.label)}
-                >
-                  ${this._renderSegment(row.parsed.year, color, false)}
-                </div>
-                <div
-                  class="seg-group ${editable ? "editable" : ""}"
-                  @click=${() => editable && this._editRow(entityId, row.label)}
-                >
-                  ${this._renderSegment(row.parsed.hourMin, color, true)}
-                </div>
-                ${this._renderAmPm(row.am, color)}
-              `
-            : html`<div class="seg-group empty" style="color:#444">--:--</div>`}
+        <div
+          class="segments ${editable ? "editable" : ""} ${p ? "" : "empty"}"
+          @click=${click}
+        >
+          <div class="col col-two">
+            <div class="col-head"><span>MONTH</span><span>DAY</span></div>
+            <div class="col-body">
+              ${this._renderPair(md?.slice(0, 2), color)}
+              <span class="seg-gap"></span>
+              ${this._renderPair(md?.slice(2, 4), color)}
+            </div>
+          </div>
+          <div class="col col-one">
+            <div class="col-head"><span>YEAR</span></div>
+            <div class="col-body">${this._renderYear(p?.year, color)}</div>
+          </div>
+          <div class="col col-ampm">
+            <div class="col-head"><span>PM</span><span>AM</span></div>
+            <div class="col-body">${this._renderAmPm(row.am, color)}</div>
+          </div>
+          <div class="col col-two">
+            <div class="col-head"><span>HOUR</span><span>MIN</span></div>
+            <div class="col-body">
+              ${this._renderPair(p?.hourMin?.slice(0, 2), color)}
+              <span class="colon">:</span>
+              ${this._renderPair(p?.hourMin?.slice(2, 4), color)}
+            </div>
+          </div>
         </div>
+        <div class="row-label" style="color:${theme.label_color}">${row.label}</div>
       </div>
     `;
   }
 
-  private _renderSegment(value: string, color: string, withColon: boolean): TemplateResult {
-    const chars = (value + "    ").slice(0, 4).split("");
-    return html`
-      <div class="led-segment" style="color:${color}">
-        ${chars.map((c) => html`<span class="digit">${c}</span>`)}
-        ${withColon ? html`<span class="colon">:</span>` : nothing}
-      </div>
-    `;
+  private _renderPair(value: string | undefined, color: string): TemplateResult {
+    const v = value && value.length >= 2 ? value.slice(0, 2) : "--";
+    return html`<span class="led-pair" style="color:${color}">
+      <span class="digit">${v[0]}</span><span class="digit">${v[1]}</span>
+    </span>`;
+  }
+
+  private _renderYear(value: string | undefined, color: string): TemplateResult {
+    const v = value && value.length === 4 ? value : "----";
+    return html`<span class="led-year" style="color:${color}">
+      ${v.split("").map((c) => html`<span class="digit">${c}</span>`)}
+    </span>`;
   }
 
   private _renderAmPm(am: boolean, color: string): TemplateResult {
     return html`
-      <div class="ampm">
-        <div class="ampm-lamp ${am ? "on" : "off"}" style="--lamp:${color}"></div>
-        <div class="ampm-lamp ${am ? "off" : "on"}" style="--lamp:${color}"></div>
-        <div class="ampm-cap">AM</div>
-        <div class="ampm-cap">PM</div>
+      <div class="ampm-stack" style="--lamp:${color}">
+        <div class="ampm-lamp ${am ? "off" : "on"}"></div>
+        <div class="ampm-lamp ${am ? "on" : "off"}"></div>
       </div>
     `;
   }
@@ -327,8 +336,8 @@ export class TimeCircuitsCard extends LitElement {
     .row {
       display: flex;
       flex-direction: column;
-      gap: 3px;
-      padding: 9px 14px 10px;
+      gap: 4px;
+      padding: 10px 18px 8px;
       background: #050505;
       position: relative;
     }
@@ -340,25 +349,52 @@ export class TimeCircuitsCard extends LitElement {
       font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
       font-size: 9px;
       letter-spacing: 2.5px;
-      opacity: 0.5;
+      opacity: 0.55;
       text-transform: uppercase;
       font-weight: 700;
-      text-align: left;
+      text-align: center;
+      margin-top: 2px;
     }
     .segments {
       display: flex;
-      align-items: center;
-      gap: 10px;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 14px;
       flex-wrap: nowrap;
     }
-    .seg-group { cursor: default; }
-    .seg-group.editable { cursor: pointer; }
-    .seg-group.empty {
-      font-size: 26px;
-      letter-spacing: 2px;
-      color: #333;
+    .segments.editable { cursor: pointer; }
+    .segments.empty { color: #444; }
+    .col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
     }
-    .led-segment {
+    .col-head {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 7px;
+      letter-spacing: 1px;
+      color: #b33a3a;
+      font-weight: 700;
+      text-transform: uppercase;
+      opacity: 0.85;
+    }
+    .col-head span { min-width: 2em; text-align: center; }
+    .col-one .col-head span { min-width: 4em; }
+    .col-ampm .col-head {
+      flex-direction: column;
+      gap: 2px;
+    }
+    .col-ampm .col-head span { min-width: 0; }
+    .col-body {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+    .led-pair, .led-year {
       display: inline-flex;
       align-items: center;
       font-family: var(--led-font);
@@ -366,7 +402,8 @@ export class TimeCircuitsCard extends LitElement {
       font-weight: 400;
       letter-spacing: 1px;
     }
-    .led-segment .digit {
+    .seg-gap { width: 8px; display: inline-block; }
+    .digit {
       font-size: 32px;
       line-height: 1;
       min-width: 0.62em;
@@ -376,27 +413,27 @@ export class TimeCircuitsCard extends LitElement {
         0 0 12px currentColor,
         0 0 2px currentColor;
     }
-    .led-segment .colon {
+    .colon {
+      font-family: var(--led-font);
       font-size: 32px;
-      padding: 0 1px;
+      line-height: 1;
+      padding: 0 2px;
       text-shadow: 0 0 6px currentColor, 0 0 14px currentColor;
       animation: blink 1s steps(2, start) infinite;
     }
     @keyframes blink { 50% { opacity: 0.2; } }
-    .ampm {
-      display: grid;
-      grid-template-columns: auto auto;
-      grid-template-rows: auto auto;
-      column-gap: 6px;
-      row-gap: 2px;
-      margin-left: 8px;
+    .ampm-stack {
+      display: flex;
+      flex-direction: column;
       align-items: center;
+      gap: 5px;
+      padding: 2px 0;
     }
     .ampm-lamp {
-      width: 10px;
-      height: 10px;
+      width: 11px;
+      height: 11px;
       border-radius: 50%;
-      background: #1a1a1a;
+      background: #161616;
       border: 1px solid #333;
       box-sizing: border-box;
       transition: background 0.2s, box-shadow 0.2s;
@@ -405,18 +442,7 @@ export class TimeCircuitsCard extends LitElement {
       background: var(--lamp);
       box-shadow: 0 0 5px var(--lamp), 0 0 10px var(--lamp), inset 0 0 2px rgba(255,255,255,0.5);
     }
-    .ampm-lamp.off {
-      background: #161616;
-      box-shadow: none;
-    }
-    .ampm-cap {
-      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-      font-size: 8px;
-      letter-spacing: 0.5px;
-      color: #777;
-      text-align: center;
-      line-height: 1;
-    }
+    .ampm-lamp.off { background: #161616; box-shadow: none; }
     .sync-bar {
       display: flex;
       justify-content: center;
@@ -424,10 +450,11 @@ export class TimeCircuitsCard extends LitElement {
       padding-bottom: 2px;
     }
     @media (max-width: 480px) {
-      .led-segment .digit { font-size: 25px; }
-      .led-segment .colon { font-size: 25px; }
-      .segments { gap: 6px; }
-      .row { padding: 7px 10px 8px; }
+      .digit { font-size: 24px; }
+      .colon { font-size: 24px; }
+      .segments { gap: 8px; }
+      .row { padding: 8px 10px 6px; }
+      .col-head { font-size: 6px; gap: 6px; }
     }
   `;
 }
