@@ -14,7 +14,7 @@ import {
 } from "./types";
 import "./time-circuits-editor";
 
-const VERSION = "1.6.3";
+const VERSION = "1.6.4";
 
 const CARD_NAME = "time-circuits-card";
 

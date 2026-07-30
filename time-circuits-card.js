@@ -828,7 +828,7 @@ var __decorateClass = (decorators, target, key, kind) => {
   if (kind && result) __defProp(target, key, result);
   return result;
 };
-const VERSION = "1.6.3";
+const VERSION = "1.6.4";
 const CARD_NAME = "time-circuits-card";
 const DSEG7_FONT_FACE_ID = "time-circuits-card-dseg7-font";
 function ensureDseg7Font() {
