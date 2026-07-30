@@ -619,7 +619,7 @@ const DATE_FORMAT_MD = "MD";
 const DATE_FORMAT_DM = "DM";
 function parseTimeState(raw) {
   if (!raw) return void 0;
-  const s2 = raw.trim();
+  const s2 = String(raw).trim();
   if (!/^\d{12}$/.test(s2)) return void 0;
   return {
     monthDay: s2.slice(0, 4),
@@ -916,7 +916,10 @@ let TimeCircuitsCard = class extends i {
   _rowFromEntity(label, entityId) {
     const st = this._state(entityId);
     const parsed = parseTimeState(st == null ? void 0 : st.state);
-    if (!parsed) return { label, am: true };
+    if (!parsed) {
+      console.debug(`[time-circuits] ${label} entity=${entityId} state=${st == null ? void 0 : st.state} -> parse failed`);
+      return { label, am: true };
+    }
     const fmt = this._dateFormat();
     return {
       label,
@@ -1057,7 +1060,7 @@ Format: ${orderLabel} (12 digits)`,
   _cardStyle(theme) {
     return [
       `background:${theme.background}`,
-      `border:6px solid #9a9a9a`,
+      `border:6px solid #1a1a1a`,
       `border-radius:14px`,
       `padding:0`,
       `overflow:hidden`
@@ -1077,14 +1080,19 @@ TimeCircuitsCard.styles = i$3`
       border: 3px solid #1a1a1a;
       border-radius: 10px;
       margin: 4px;
-      background: #000;
-      box-shadow: inset 0 0 10px rgba(0,0,0,0.95), 0 2px 6px rgba(0,0,0,0.6);
+      background:
+        linear-gradient(180deg, #d0d0d0 0%, #a8a8a8 30%, #888 70%, #707070 100%);
+      box-shadow:
+        inset 0 1px 0 #e8e8e8,
+        inset 0 -2px 6px rgba(0,0,0,0.5),
+        0 2px 6px rgba(0,0,0,0.6);
     }
     .panel {
       display: flex;
       flex-direction: column;
       gap: 0;
       font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      padding: 10px 8px 8px;
     }
     .card-title {
       font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -1092,33 +1100,28 @@ TimeCircuitsCard.styles = i$3`
       letter-spacing: 4px;
       text-transform: uppercase;
       text-align: center;
-      opacity: 0.45;
+      opacity: 0.55;
       margin: 2px 0 8px;
       font-weight: 700;
+      color: #222;
     }
     .row {
       display: flex;
       flex-direction: column;
       gap: 6px;
-      padding: 10px 10px 8px;
-      background: #050505;
+      padding: 8px 4px 7px;
       position: relative;
     }
-    .row + .row { border-top: 3px solid #6e6e6e; }
+    .row + .row {
+      border-top: 2px solid #5a5a5a;
+      box-shadow: inset 0 1px 0 #c0c0c0;
+    }
     .segments {
       display: flex;
       align-items: flex-end;
       justify-content: center;
       gap: 0;
       flex-wrap: nowrap;
-      background:
-        linear-gradient(180deg, #c8c8c8 0%, #9a9a9a 40%, #7e7e7e 100%);
-      padding: 8px 6px;
-      border-radius: 6px;
-      box-shadow:
-        inset 0 1px 0 #e0e0e0,
-        inset 0 -2px 4px rgba(0,0,0,0.4),
-        0 1px 2px rgba(0,0,0,0.5);
     }
     .segments.editable { cursor: pointer; }
     .segments.empty { color: #444; }
@@ -1164,13 +1167,15 @@ TimeCircuitsCard.styles = i$3`
       display: flex;
       align-items: center;
       gap: 2px;
-      padding: 4px 4px 3px;
+      padding: 5px 5px 4px;
       background: #000;
-      border-radius: 3px;
+      border-radius: 4px;
       box-shadow:
-        inset 0 0 4px rgba(0,0,0,0.9),
-        inset 0 1px 1px rgba(0,0,0,0.8),
-        0 1px 0 #b8b8b8;
+        inset 0 0 6px rgba(0,0,0,0.95),
+        inset 0 2px 3px rgba(0,0,0,0.8),
+        inset 0 -1px 0 #4a4a4a,
+        0 1px 0 #d8d8d8,
+        0 2px 3px rgba(0,0,0,0.4);
     }
     .col-ampm .col-body { padding: 4px 6px; }
     .led-pair, .led-year {

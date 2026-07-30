@@ -78,7 +78,7 @@ export const DATE_FORMAT_DM = "DM"; // day/month
  */
 export function parseTimeState(raw: string | undefined | null): ParsedTime | undefined {
   if (!raw) return undefined;
-  const s = raw.trim();
+  const s = String(raw).trim();
   if (!/^\d{12}$/.test(s)) return undefined;
   return {
     monthDay: s.slice(0, 4),
