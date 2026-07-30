@@ -823,7 +823,7 @@ var __decorateClass = (decorators, target, key, kind) => {
   if (kind && result) __defProp(target, key, result);
   return result;
 };
-const VERSION = "1.1.0";
+const VERSION = "1.3.0";
 const CARD_NAME = "time-circuits-card";
 const DSEG7_FONT_FACE_ID = "time-circuits-card-dseg7-font";
 function ensureDseg7Font() {
@@ -1020,7 +1020,7 @@ Format: ${orderLabel} (12 digits)`,
             <div class="col-body">${this._renderYear(p2 == null ? void 0 : p2.year, color)}</div>
           </div>
           <div class="col col-ampm">
-            <div class="col-body">${this._renderAmPm(row.am, color)}</div>
+            <div class="ampm-well">${this._renderAmPm(row.am, color)}</div>
           </div>
           <div class="col col-two">
             <div class="col-head"><span class="dymo">HOUR</span><span class="dymo">MIN</span></div>
@@ -1170,6 +1170,12 @@ TimeCircuitsCard.styles = i$3`
         inset 0 1px 2px rgba(0,0,0,0.7),
         0 1px 0 #d0d0d0,
         0 2px 2px rgba(0,0,0,0.3);
+    }
+    .ampm-well {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 6px;
     }
     .led-pair, .led-year {
       display: inline-flex;
