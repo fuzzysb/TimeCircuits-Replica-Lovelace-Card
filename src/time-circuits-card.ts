@@ -58,10 +58,10 @@ export class TimeCircuitsCard extends LitElement {
 
   static getStubConfig(): Partial<TimeCircuitsConfig> {
     return {
-      destination_entity: "text.time_circuits_replica_destination_time",
-      departed_entity: "text.time_circuits_replica_last_time_departed",
-      date_format_entity: "select.time_circuits_replica_date_format",
-      sync_entity: "button.time_circuits_replica_sync_rtc_time",
+      destination_entity: "text.time_circuits_prop_destination_time",
+      departed_entity: "text.time_circuits_prop_last_time_departed",
+      date_format_entity: "select.time_circuits_prop_date_format",
+      sync_entity: "button.time_circuits_prop_sync_rtc_time",
     };
   }
 
