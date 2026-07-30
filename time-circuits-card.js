@@ -1102,9 +1102,10 @@ Minute (MM)`, min);
     ].join(";");
   }
   _panelStyle() {
-    const scale = Math.max(0.45, Math.min(1.3, this._cardWidth / 400));
+    const usable = this._cardWidth - 40;
+    const scale = Math.max(0.4, Math.min(1, usable / 380));
     return [
-      `padding:10px 18px 8px`,
+      `padding:calc(10px * ${scale}) calc(18px * ${scale}) calc(8px * ${scale})`,
       `--led-font:${this._cfg.font_family ?? "'DSEG7 Classic', 'Courier New', monospace"}`,
       `--scale:${scale}`
     ].join(";");
@@ -1129,7 +1130,9 @@ TimeCircuitsCard.styles = i$3`
       flex-direction: column;
       gap: 0;
       font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-      padding: calc(8px * var(--scale)) calc(18px * var(--scale)) calc(6px * var(--scale));
+      box-sizing: border-box;
+      max-width: 100%;
+      overflow: hidden;
     }
     .card-title {
       font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -1156,6 +1159,8 @@ TimeCircuitsCard.styles = i$3`
       justify-content: center;
       gap: 0;
       flex-wrap: nowrap;
+      max-width: 100%;
+      overflow: hidden;
     }
     .segments.editable { cursor: pointer; }
     .segments.empty { color: #444; }
@@ -1188,13 +1193,13 @@ TimeCircuitsCard.styles = i$3`
       text-transform: uppercase;
       padding: calc(2px * var(--scale)) calc(5px * var(--scale));
       border-radius: 2px;
-      min-width: 2.5em;
       box-shadow:
         inset 0 1px 0 rgba(255,255,255,0.25),
         inset 0 -1px 0 rgba(0,0,0,0.4),
         0 1px 1px rgba(0,0,0,0.5);
+      white-space: nowrap;
     }
-    .col-one .dymo { min-width: 4em; }
+    .col-one .dymo { min-width: calc(28px * var(--scale)); }
     .col-body {
       display: flex;
       align-items: center;
