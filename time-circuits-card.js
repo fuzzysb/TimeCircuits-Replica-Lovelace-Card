@@ -1035,9 +1035,11 @@ Format: ${orderLabel} (12 digits)`,
   }
   _renderAmPm(am, color) {
     return b`
-      <div class="ampm" style="color:${color}">
-        <span class="ampm-label ${am ? "on" : "off"}">AM</span>
-        <span class="ampm-label ${am ? "off" : "on"}">PM</span>
+      <div class="ampm">
+        <div class="ampm-lamp ${am ? "on" : "off"}" style="--lamp:${color}"></div>
+        <div class="ampm-lamp ${am ? "off" : "on"}" style="--lamp:${color}"></div>
+        <div class="ampm-cap">AM</div>
+        <div class="ampm-cap">PM</div>
       </div>
     `;
   }
@@ -1052,8 +1054,8 @@ Format: ${orderLabel} (12 digits)`,
   }
   _panelStyle() {
     return [
-      `padding:16px 18px 12px`,
-      `font-family:${this._cfg.font_family ?? "'DSEG7 Classic', 'Courier New', monospace"}`
+      `padding:14px 16px 10px`,
+      `--led-font:${this._cfg.font_family ?? "'DSEG7 Classic', 'Courier New', monospace"}`
     ].join(";");
   }
 };
@@ -1061,42 +1063,53 @@ TimeCircuitsCard.styles = i$3`
     :host { display: block; }
     ha-card { display: block; }
     .bezel {
-      border: 2px solid #000;
-      border-radius: 12px;
-      margin: 6px;
+      border: 3px solid #1a1a1a;
+      border-radius: 10px;
+      margin: 4px;
       background: #000;
-      box-shadow: inset 0 0 12px rgba(0,0,0,0.9);
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.95), 0 2px 6px rgba(0,0,0,0.6);
     }
-    .panel { display: flex; flex-direction: column; gap: 8px; }
+    .panel {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    }
     .card-title {
-      font-size: 13px;
-      letter-spacing: 3px;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 11px;
+      letter-spacing: 4px;
       text-transform: uppercase;
       text-align: center;
-      opacity: 0.6;
-      margin-bottom: 6px;
-      font-weight: bold;
+      opacity: 0.45;
+      margin: 2px 0 8px;
+      font-weight: 700;
     }
     .row {
       display: flex;
       flex-direction: column;
-      gap: 2px;
-      padding: 8px 12px;
-      background: rgba(0,0,0,0.6);
-      border-radius: 6px;
-      border: 1px solid rgba(255,255,255,0.04);
+      gap: 3px;
+      padding: 9px 14px 10px;
+      background: #050505;
+      position: relative;
+    }
+    .row + .row {
+      border-top: 2px solid #2a2a2a;
+      box-shadow: inset 0 1px 0 0 #3a3a3a;
     }
     .row-label {
-      font-size: 10px;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 9px;
       letter-spacing: 2.5px;
-      opacity: 0.55;
+      opacity: 0.5;
       text-transform: uppercase;
-      font-weight: bold;
+      font-weight: 700;
+      text-align: left;
     }
     .segments {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 10px;
       flex-wrap: nowrap;
     }
     .seg-group { cursor: default; }
@@ -1104,54 +1117,78 @@ TimeCircuitsCard.styles = i$3`
     .seg-group.empty {
       font-size: 26px;
       letter-spacing: 2px;
+      color: #333;
     }
     .led-segment {
       display: inline-flex;
       align-items: center;
+      font-family: var(--led-font);
       font-variant-numeric: tabular-nums;
-      font-weight: bold;
-      letter-spacing: 2px;
+      font-weight: 400;
+      letter-spacing: 1px;
     }
     .led-segment .digit {
-      font-size: 34px;
+      font-size: 32px;
       line-height: 1;
-      min-width: 0.6em;
+      min-width: 0.62em;
       text-align: center;
       text-shadow:
-        0 0 6px currentColor,
-        0 0 14px currentColor,
+        0 0 5px currentColor,
+        0 0 12px currentColor,
         0 0 2px currentColor;
     }
     .led-segment .colon {
-      font-size: 34px;
-      padding: 0 2px;
-      text-shadow: 0 0 8px currentColor, 0 0 16px currentColor;
+      font-size: 32px;
+      padding: 0 1px;
+      text-shadow: 0 0 6px currentColor, 0 0 14px currentColor;
       animation: blink 1s steps(2, start) infinite;
     }
-    @keyframes blink { 50% { opacity: 0.25; } }
+    @keyframes blink { 50% { opacity: 0.2; } }
     .ampm {
-      display: flex;
-      flex-direction: column;
-      gap: 1px;
-      margin-left: 10px;
-      font-weight: bold;
+      display: grid;
+      grid-template-columns: auto auto;
+      grid-template-rows: auto auto;
+      column-gap: 6px;
+      row-gap: 2px;
+      margin-left: 8px;
+      align-items: center;
     }
-    .ampm-label {
-      font-size: 11px;
-      letter-spacing: 1px;
-      text-shadow: 0 0 4px currentColor;
+    .ampm-lamp {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      box-sizing: border-box;
+      transition: background 0.2s, box-shadow 0.2s;
     }
-    .ampm-label.on { opacity: 1; }
-    .ampm-label.off { opacity: 0.2; }
+    .ampm-lamp.on {
+      background: var(--lamp);
+      box-shadow: 0 0 5px var(--lamp), 0 0 10px var(--lamp), inset 0 0 2px rgba(255,255,255,0.5);
+    }
+    .ampm-lamp.off {
+      background: #161616;
+      box-shadow: none;
+    }
+    .ampm-cap {
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 8px;
+      letter-spacing: 0.5px;
+      color: #777;
+      text-align: center;
+      line-height: 1;
+    }
     .sync-bar {
       display: flex;
       justify-content: center;
       margin-top: 8px;
+      padding-bottom: 2px;
     }
     @media (max-width: 480px) {
-      .led-segment .digit { font-size: 26px; }
-      .led-segment .colon { font-size: 26px; }
-      .segments { gap: 4px; }
+      .led-segment .digit { font-size: 25px; }
+      .led-segment .colon { font-size: 25px; }
+      .segments { gap: 6px; }
+      .row { padding: 7px 10px 8px; }
     }
   `;
 __decorateClass([
