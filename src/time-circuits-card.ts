@@ -163,22 +163,46 @@ export class TimeCircuitsCard extends LitElement {
     const st = this._state(entityId);
     const parsed = parseTimeState(st?.state);
     const fmt = this._dateFormat();
-    const initialValue = parsed
-      ? `${toDisplayOrder(parsed.monthDay, fmt)}${parsed.year}${parsed.hourMin}`
-      : "010120250000";
-    const orderLabel = fmt === "DM" ? "DDMMYYYYHHMM" : "MMDDYYYYHHMM";
-    const v = window.prompt(
-      `Set ${label ?? entityId}\nFormat: ${orderLabel} (12 digits)`,
-      initialValue,
-    );
-    if (v == null) return;
-    if (!/^\d{12}$/.test(v.trim())) {
-      window.alert(`Value must be exactly 12 digits: ${orderLabel}`);
+    const dm = parsed ? toDisplayOrder(parsed.monthDay, fmt) : "";
+    const month = parsed ? parsed.monthDay.slice(0, 2) : "";
+    const day = parsed ? parsed.monthDay.slice(2, 4) : "";
+    const year = parsed ? parsed.year : "";
+    const hour = parsed ? parsed.hourMin.slice(0, 2) : "";
+    const min = parsed ? parsed.hourMin.slice(2, 4) : "";
+
+    const pad = (s: string) => s.length < 2 ? "0".repeat(2 - s.length) + s : s;
+    const pad4 = (s: string) => s.length < 4 ? "0".repeat(4 - s.length) + s : s;
+
+    const isDM = fmt === "DM";
+    const firstLabel = isDM ? "Day (DD)" : "Month (MM)";
+    const secondLabel = isDM ? "Month (MM)" : "Day (DD)";
+    const firstDefault = isDM ? day : month;
+    const secondDefault = isDM ? month : day;
+
+    const d = window.prompt(`${label}\n${firstLabel}`, firstDefault);
+    if (d == null) return;
+    const m = window.prompt(`${label}\n${secondLabel}`, secondDefault);
+    if (m == null) return;
+    const y = window.prompt(`${label}\nYear (YYYY)`, year);
+    if (y == null) return;
+    const h = window.prompt(`${label}\nHour (HH, 24hr)`, hour);
+    if (h == null) return;
+    const mn = window.prompt(`${label}\nMinute (MM)`, min);
+    if (mn == null) return;
+
+    const dd = pad(d.trim());
+    const mm = pad(m.trim());
+    const yy = pad4(y.trim());
+    const hh = pad(h.trim());
+    const mi = pad(mn.trim());
+
+    if (!/^\d{2}$/.test(dd) || !/^\d{2}$/.test(mm) || !/^\d{4}$/.test(yy) || !/^\d{2}$/.test(hh) || !/^\d{2}$/.test(mi)) {
+      window.alert("Invalid input. Please enter numbers only with correct digit counts.");
       return;
     }
-    const trimmed = v.trim();
-    const storedMD = fmt === "DM" ? trimmed.slice(2, 4) + trimmed.slice(0, 2) : trimmed.slice(0, 4);
-    const storedValue = storedMD + trimmed.slice(4);
+
+    const storedMD = mm + dd;
+    const storedValue = storedMD + yy + hh + mi;
     this._setTimeEntity(entityId, storedValue);
   }
 
@@ -328,6 +352,7 @@ export class TimeCircuitsCard extends LitElement {
       gap: 0;
       font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
       padding: 8px 6px 6px;
+      container-type: inline-size;
     }
     .card-title {
       font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -380,7 +405,7 @@ export class TimeCircuitsCard extends LitElement {
       justify-content: center;
       background: #b71c1c;
       color: #fff;
-      font-size: 7px;
+      font-size: clamp(6px, 1.8cqw, 9px);
       font-weight: 700;
       letter-spacing: 0.5px;
       text-transform: uppercase;
@@ -422,7 +447,7 @@ export class TimeCircuitsCard extends LitElement {
     }
     .seg-gap { width: 6px; display: inline-block; }
     .digit {
-      font-size: 30px;
+      font-size: clamp(14px, 7.5cqw, 42px);
       line-height: 1;
       min-width: 0.62em;
       text-align: center;
@@ -433,7 +458,7 @@ export class TimeCircuitsCard extends LitElement {
     }
     .colon {
       font-family: var(--led-font);
-      font-size: 30px;
+      font-size: clamp(14px, 7.5cqw, 42px);
       line-height: 1;
       padding: 0 2px;
       text-shadow: 0 0 6px currentColor, 0 0 14px currentColor;
@@ -447,8 +472,8 @@ export class TimeCircuitsCard extends LitElement {
       gap: 3px;
     }
     .ampm-lamp {
-      width: 12px;
-      height: 12px;
+      width: clamp(8px, 3cqw, 16px);
+      height: clamp(8px, 3cqw, 16px);
       border-radius: 50%;
       background: #2a2a2a;
       border: 2px solid #888;
@@ -474,7 +499,7 @@ export class TimeCircuitsCard extends LitElement {
       background: #111;
       color: #fff;
       font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-      font-size: 9px;
+      font-size: clamp(7px, 2.3cqw, 11px);
       font-weight: 700;
       letter-spacing: 2.5px;
       text-transform: uppercase;
@@ -490,13 +515,6 @@ export class TimeCircuitsCard extends LitElement {
       justify-content: center;
       margin-top: 6px;
       padding-bottom: 2px;
-    }
-    @media (max-width: 480px) {
-      .digit { font-size: 22px; }
-      .colon { font-size: 22px; }
-      .col { padding: 0 5px; }
-      .row { padding: 5px 2px 4px; }
-      .dymo { font-size: 6px; padding: 2px 4px; }
     }
   `;
 }

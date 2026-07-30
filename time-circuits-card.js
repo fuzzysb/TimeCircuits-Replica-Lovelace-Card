@@ -946,21 +946,45 @@ let TimeCircuitsCard = class extends i {
     const st = this._state(entityId);
     const parsed = parseTimeState(st == null ? void 0 : st.state);
     const fmt = this._dateFormat();
-    const initialValue = parsed ? `${toDisplayOrder(parsed.monthDay, fmt)}${parsed.year}${parsed.hourMin}` : "010120250000";
-    const orderLabel = fmt === "DM" ? "DDMMYYYYHHMM" : "MMDDYYYYHHMM";
-    const v2 = window.prompt(
-      `Set ${label ?? entityId}
-Format: ${orderLabel} (12 digits)`,
-      initialValue
-    );
-    if (v2 == null) return;
-    if (!/^\d{12}$/.test(v2.trim())) {
-      window.alert(`Value must be exactly 12 digits: ${orderLabel}`);
+    parsed ? toDisplayOrder(parsed.monthDay, fmt) : "";
+    const month = parsed ? parsed.monthDay.slice(0, 2) : "";
+    const day = parsed ? parsed.monthDay.slice(2, 4) : "";
+    const year = parsed ? parsed.year : "";
+    const hour = parsed ? parsed.hourMin.slice(0, 2) : "";
+    const min = parsed ? parsed.hourMin.slice(2, 4) : "";
+    const pad = (s2) => s2.length < 2 ? "0".repeat(2 - s2.length) + s2 : s2;
+    const pad4 = (s2) => s2.length < 4 ? "0".repeat(4 - s2.length) + s2 : s2;
+    const isDM = fmt === "DM";
+    const firstLabel = isDM ? "Day (DD)" : "Month (MM)";
+    const secondLabel = isDM ? "Month (MM)" : "Day (DD)";
+    const firstDefault = isDM ? day : month;
+    const secondDefault = isDM ? month : day;
+    const d2 = window.prompt(`${label}
+${firstLabel}`, firstDefault);
+    if (d2 == null) return;
+    const m2 = window.prompt(`${label}
+${secondLabel}`, secondDefault);
+    if (m2 == null) return;
+    const y3 = window.prompt(`${label}
+Year (YYYY)`, year);
+    if (y3 == null) return;
+    const h2 = window.prompt(`${label}
+Hour (HH, 24hr)`, hour);
+    if (h2 == null) return;
+    const mn = window.prompt(`${label}
+Minute (MM)`, min);
+    if (mn == null) return;
+    const dd = pad(d2.trim());
+    const mm = pad(m2.trim());
+    const yy = pad4(y3.trim());
+    const hh = pad(h2.trim());
+    const mi = pad(mn.trim());
+    if (!/^\d{2}$/.test(dd) || !/^\d{2}$/.test(mm) || !/^\d{4}$/.test(yy) || !/^\d{2}$/.test(hh) || !/^\d{2}$/.test(mi)) {
+      window.alert("Invalid input. Please enter numbers only with correct digit counts.");
       return;
     }
-    const trimmed = v2.trim();
-    const storedMD = fmt === "DM" ? trimmed.slice(2, 4) + trimmed.slice(0, 2) : trimmed.slice(0, 4);
-    const storedValue = storedMD + trimmed.slice(4);
+    const storedMD = mm + dd;
+    const storedValue = storedMD + yy + hh + mi;
     this._setTimeEntity(entityId, storedValue);
   }
   render() {
@@ -1093,6 +1117,7 @@ TimeCircuitsCard.styles = i$3`
       gap: 0;
       font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
       padding: 8px 6px 6px;
+      container-type: inline-size;
     }
     .card-title {
       font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -1145,7 +1170,7 @@ TimeCircuitsCard.styles = i$3`
       justify-content: center;
       background: #b71c1c;
       color: #fff;
-      font-size: 7px;
+      font-size: clamp(6px, 1.8cqw, 9px);
       font-weight: 700;
       letter-spacing: 0.5px;
       text-transform: uppercase;
@@ -1187,7 +1212,7 @@ TimeCircuitsCard.styles = i$3`
     }
     .seg-gap { width: 6px; display: inline-block; }
     .digit {
-      font-size: 30px;
+      font-size: clamp(14px, 7.5cqw, 42px);
       line-height: 1;
       min-width: 0.62em;
       text-align: center;
@@ -1198,7 +1223,7 @@ TimeCircuitsCard.styles = i$3`
     }
     .colon {
       font-family: var(--led-font);
-      font-size: 30px;
+      font-size: clamp(14px, 7.5cqw, 42px);
       line-height: 1;
       padding: 0 2px;
       text-shadow: 0 0 6px currentColor, 0 0 14px currentColor;
@@ -1212,8 +1237,8 @@ TimeCircuitsCard.styles = i$3`
       gap: 3px;
     }
     .ampm-lamp {
-      width: 12px;
-      height: 12px;
+      width: clamp(8px, 3cqw, 16px);
+      height: clamp(8px, 3cqw, 16px);
       border-radius: 50%;
       background: #2a2a2a;
       border: 2px solid #888;
@@ -1239,7 +1264,7 @@ TimeCircuitsCard.styles = i$3`
       background: #111;
       color: #fff;
       font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-      font-size: 9px;
+      font-size: clamp(7px, 2.3cqw, 11px);
       font-weight: 700;
       letter-spacing: 2.5px;
       text-transform: uppercase;
@@ -1255,13 +1280,6 @@ TimeCircuitsCard.styles = i$3`
       justify-content: center;
       margin-top: 6px;
       padding-bottom: 2px;
-    }
-    @media (max-width: 480px) {
-      .digit { font-size: 22px; }
-      .colon { font-size: 22px; }
-      .col { padding: 0 5px; }
-      .row { padding: 5px 2px 4px; }
-      .dymo { font-size: 6px; padding: 2px 4px; }
     }
   `;
 __decorateClass([
