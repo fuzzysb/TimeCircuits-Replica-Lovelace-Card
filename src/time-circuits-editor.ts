@@ -33,13 +33,18 @@ export class TimeCircuitsEditor extends LitElement {
 
   private _entity(kind: "text" | "select" | "button", key: keyof TimeCircuitsConfig) {
     const entities = this.hass ? Object.keys(this.hass.states) : [];
-    const filtered = entities.filter((e) => e.startsWith(kind + "."));
+    const filtered = entities.filter((e) => e.startsWith(kind + ".")).sort();
     const current = (this._cfg as any)[key] as string | undefined;
     return html`
       <ha-select
         label=${this._labelFor(key)}
         .value=${current ?? ""}
-        @selected=${(e: any) => this._fire({ [key]: e.target.value || undefined } as any)}
+        @selected=${(e: any) => {
+          const idx = e.target.selectedIndex;
+          if (idx >= 0 && idx < filtered.length) {
+            this._fire({ [key]: filtered[idx] } as any);
+          }
+        }}
         @closed=${(e: any) => e.stopPropagation()}
         clearable
       >

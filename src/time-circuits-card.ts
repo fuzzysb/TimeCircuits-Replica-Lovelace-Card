@@ -14,7 +14,7 @@ import {
 } from "./types";
 import "./time-circuits-editor";
 
-const VERSION = "1.5.0";
+const VERSION = "1.5.1";
 
 const CARD_NAME = "time-circuits-card";
 
@@ -60,10 +60,10 @@ export class TimeCircuitsCard extends LitElement {
 
   static getStubConfig(): Partial<TimeCircuitsConfig> {
     return {
-      destination_entity: "text.timecircuits_destination_time",
-      departed_entity: "text.timecircuits_last_time_departed",
-      date_format_entity: "select.timecircuits_date_format",
-      sync_entity: "button.timecircuits_sync_rtc_time",
+      destination_entity: "text.time_circuits_prop_destination_time",
+      departed_entity: "text.time_circuits_prop_last_time_departed",
+      date_format_entity: "select.time_circuits_replica_date_format",
+      sync_entity: "button.time_circuits_prop_sync_rtc_time",
     };
   }
 

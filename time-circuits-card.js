@@ -676,13 +676,18 @@ let TimeCircuitsEditor = class extends i {
   }
   _entity(kind, key) {
     const entities = this.hass ? Object.keys(this.hass.states) : [];
-    const filtered = entities.filter((e2) => e2.startsWith(kind + "."));
+    const filtered = entities.filter((e2) => e2.startsWith(kind + ".")).sort();
     const current = this._cfg[key];
     return b`
       <ha-select
         label=${this._labelFor(key)}
         .value=${current ?? ""}
-        @selected=${(e2) => this._fire({ [key]: e2.target.value || void 0 })}
+        @selected=${(e2) => {
+      const idx = e2.target.selectedIndex;
+      if (idx >= 0 && idx < filtered.length) {
+        this._fire({ [key]: filtered[idx] });
+      }
+    }}
         @closed=${(e2) => e2.stopPropagation()}
         clearable
       >
@@ -823,7 +828,7 @@ var __decorateClass = (decorators, target, key, kind) => {
   if (kind && result) __defProp(target, key, result);
   return result;
 };
-const VERSION = "1.5.0";
+const VERSION = "1.5.1";
 const CARD_NAME = "time-circuits-card";
 const DSEG7_FONT_FACE_ID = "time-circuits-card-dseg7-font";
 function ensureDseg7Font() {
@@ -854,10 +859,10 @@ let TimeCircuitsCard = class extends i {
   }
   static getStubConfig() {
     return {
-      destination_entity: "text.timecircuits_destination_time",
-      departed_entity: "text.timecircuits_last_time_departed",
-      date_format_entity: "select.timecircuits_date_format",
-      sync_entity: "button.timecircuits_sync_rtc_time"
+      destination_entity: "text.time_circuits_prop_destination_time",
+      departed_entity: "text.time_circuits_prop_last_time_departed",
+      date_format_entity: "select.time_circuits_replica_date_format",
+      sync_entity: "button.time_circuits_prop_sync_rtc_time"
     };
   }
   setConfig(cfg) {
