@@ -14,7 +14,7 @@ import {
 } from "./types";
 import "./time-circuits-editor";
 
-const VERSION = "1.6.1";
+const VERSION = "1.6.2";
 
 const CARD_NAME = "time-circuits-card";
 
@@ -247,23 +247,21 @@ export class TimeCircuitsCard extends LitElement {
             ${this._renderRow(bottom, theme, "bottom", cfg.departed_entity, true)}
             ${cfg.sync_entity || cfg.date_format_entity
               ? html`
-                  <div class="sync-bar">
+                  <div class="card-footer">
                     ${cfg.date_format_entity
                       ? html`
-                          <button
-                            class="tc-btn"
-                            style="background:${theme.accent};color:#0a0a0a"
-                            @click=${() => this._handleToggleDateFormat()}
-                          >${this._dateFormat() === "DM" ? "DD/MM" : "MM/DD"}</button>
+                          <div class="fmt-toggle" @click=${() => this._handleToggleDateFormat()}>
+                            <span class="fmt-opt ${this._dateFormat() === "MD" ? "sel" : ""}">M/D</span>
+                            <span class="fmt-opt ${this._dateFormat() === "DM" ? "sel" : ""}">D/M</span>
+                          </div>
                         `
-                      : nothing}
+                      : html`<span></span>`}
                     ${cfg.sync_entity
                       ? html`
                           <button
-                            class="tc-btn"
-                            style="background:${theme.accent};color:#0a0a0a"
+                            class="sync-btn"
                             @click=${() => this._handleSync()}
-                          >SYNC RTC</button>
+                          >⟳</button>
                         `
                       : nothing}
                   </div>
@@ -548,28 +546,59 @@ export class TimeCircuitsCard extends LitElement {
         inset 0 -1px 0 rgba(0,0,0,0.6),
         0 1px 2px rgba(0,0,0,0.5);
     }
-    .sync-bar {
+    .card-footer {
       display: flex;
-      justify-content: center;
-      gap: calc(8px * var(--scale));
-      margin-top: calc(6px * var(--scale));
-      padding-bottom: calc(2px * var(--scale));
+      align-items: center;
+      justify-content: space-between;
+      margin-top: calc(4px * var(--scale));
+      padding: 0 calc(4px * var(--scale)) calc(4px * var(--scale));
     }
-    .tc-btn {
-      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-      font-size: calc(11px * var(--scale));
-      font-weight: 700;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      border: none;
-      border-radius: 4px;
-      padding: calc(6px * var(--scale)) calc(14px * var(--scale));
+    .fmt-toggle {
+      display: inline-flex;
+      align-items: center;
+      background: #1a1a1a;
+      border-radius: 8px;
+      padding: 1px;
       cursor: pointer;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+      gap: 0;
+      border: 1px solid #444;
+    }
+    .fmt-opt {
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: calc(8px * var(--scale));
+      font-weight: 700;
+      color: #666;
+      padding: calc(2px * var(--scale)) calc(6px * var(--scale));
+      border-radius: 6px;
+      letter-spacing: 0.5px;
+      user-select: none;
+      transition: background 0.15s, color 0.15s;
+    }
+    .fmt-opt.sel {
+      background: #888;
+      color: #fff;
+    }
+    .sync-btn {
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: calc(13px * var(--scale));
+      font-weight: 700;
+      line-height: 1;
+      width: calc(22px * var(--scale));
+      height: calc(22px * var(--scale));
+      border: 1px solid #555;
+      border-radius: 50%;
+      background: linear-gradient(180deg, #c8c8c8, #909090);
+      color: #1a1a1a;
+      cursor: pointer;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.4), inset 0 1px 0 #e0e0e0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
       transition: opacity 0.15s;
     }
-    .tc-btn:hover { opacity: 0.85; }
-    .tc-btn:active { opacity: 0.7; }
+    .sync-btn:hover { opacity: 0.85; }
+    .sync-btn:active { opacity: 0.7; }
   `;
 }
 
