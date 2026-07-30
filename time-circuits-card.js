@@ -823,7 +823,7 @@ var __decorateClass = (decorators, target, key, kind) => {
   if (kind && result) __defProp(target, key, result);
   return result;
 };
-const VERSION = "1.3.0";
+const VERSION = "1.4.0";
 const CARD_NAME = "time-circuits-card";
 const DSEG7_FONT_FACE_ID = "time-circuits-card-dseg7-font";
 function ensureDseg7Font() {
