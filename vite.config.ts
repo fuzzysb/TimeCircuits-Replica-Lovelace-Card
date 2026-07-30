@@ -10,8 +10,5 @@ export default defineConfig({
     outDir: ".",
     emptyOutDir: false,
     minify: false,
-    rollupOptions: {
-      external: /^lit/,
-    },
   },
 });
