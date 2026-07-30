@@ -853,10 +853,10 @@ let TimeCircuitsCard = class extends i {
   }
   static getStubConfig() {
     return {
-      destination_entity: "text.time_circuits_prop_destination_time",
-      departed_entity: "text.time_circuits_prop_last_time_departed",
-      date_format_entity: "select.time_circuits_prop_date_format",
-      sync_entity: "button.time_circuits_prop_sync_rtc_time"
+      destination_entity: "text.timecircuits_destination_time",
+      departed_entity: "text.timecircuits_last_time_departed",
+      date_format_entity: "select.timecircuits_date_format",
+      sync_entity: "button.timecircuits_sync_rtc_time"
     };
   }
   setConfig(cfg) {
