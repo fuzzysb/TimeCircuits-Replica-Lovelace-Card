@@ -14,7 +14,7 @@ import {
 } from "./types";
 import "./time-circuits-editor";
 
-const VERSION = "1.4.1";
+const VERSION = "1.5.0";
 
 const CARD_NAME = "time-circuits-card";
 
@@ -156,6 +156,16 @@ export class TimeCircuitsCard extends LitElement {
     return theme.bottom_color;
   }
 
+  private _handleToggleDateFormat() {
+    const entityId = this._cfg.date_format_entity;
+    if (!entityId || !this.hass) return;
+    const newFmt = this._dateFormat() === "DM" ? "MD" : "DM";
+    this.hass.callService("select", "select_option", {
+      entity_id: entityId,
+      option: newFmt,
+    });
+  }
+
   private _handleSync() {
     const entityId = this._cfg.sync_entity;
     if (!entityId || !this.hass) return;
@@ -235,15 +245,29 @@ export class TimeCircuitsCard extends LitElement {
             ${this._renderRow(top, theme, "top", cfg.destination_entity, true)}
             ${this._renderRow(present, theme, "middle", cfg.present_entity, false)}
             ${this._renderRow(bottom, theme, "bottom", cfg.departed_entity, true)}
-            ${cfg.sync_entity
+            ${cfg.sync_entity || cfg.date_format_entity
               ? html`
                   <div class="sync-bar">
-                    <mwc-button
-                      raised
-                      label="SYNC RTC"
-                      style="--mdc-theme-primary:${theme.accent};--mdc-theme-on-primary:#0a0a0a"
-                      @click=${() => this._handleSync()}
-                    ></mwc-button>
+                    ${cfg.date_format_entity
+                      ? html`
+                          <mwc-button
+                            raised
+                            label=${this._dateFormat() === "DM" ? "DD/MM" : "MM/DD"}
+                            style="--mdc-theme-primary:${theme.accent};--mdc-theme-on-primary:#0a0a0a"
+                            @click=${() => this._handleToggleDateFormat()}
+                          ></mwc-button>
+                        `
+                      : nothing}
+                    ${cfg.sync_entity
+                      ? html`
+                          <mwc-button
+                            raised
+                            label="SYNC RTC"
+                            style="--mdc-theme-primary:${theme.accent};--mdc-theme-on-primary:#0a0a0a"
+                            @click=${() => this._handleSync()}
+                          ></mwc-button>
+                        `
+                      : nothing}
                   </div>
                 `
               : nothing}
@@ -529,8 +553,9 @@ export class TimeCircuitsCard extends LitElement {
     .sync-bar {
       display: flex;
       justify-content: center;
-      margin-top: 6px;
-      padding-bottom: 2px;
+      gap: calc(8px * var(--scale));
+      margin-top: calc(6px * var(--scale));
+      padding-bottom: calc(2px * var(--scale));
     }
   `;
 }

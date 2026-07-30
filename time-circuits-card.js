@@ -823,7 +823,7 @@ var __decorateClass = (decorators, target, key, kind) => {
   if (kind && result) __defProp(target, key, result);
   return result;
 };
-const VERSION = "1.4.1";
+const VERSION = "1.5.0";
 const CARD_NAME = "time-circuits-card";
 const DSEG7_FONT_FACE_ID = "time-circuits-card-dseg7-font";
 function ensureDseg7Font() {
@@ -940,6 +940,15 @@ let TimeCircuitsCard = class extends i {
     if (kind === "middle") return theme.middle_color;
     return theme.bottom_color;
   }
+  _handleToggleDateFormat() {
+    const entityId = this._cfg.date_format_entity;
+    if (!entityId || !this.hass) return;
+    const newFmt = this._dateFormat() === "DM" ? "MD" : "DM";
+    this.hass.callService("select", "select_option", {
+      entity_id: entityId,
+      option: newFmt
+    });
+  }
   _handleSync() {
     const entityId = this._cfg.sync_entity;
     if (!entityId || !this.hass) return;
@@ -1012,14 +1021,24 @@ Minute (MM)`, min);
             ${this._renderRow(top, theme, "top", cfg.destination_entity, true)}
             ${this._renderRow(present, theme, "middle", cfg.present_entity, false)}
             ${this._renderRow(bottom, theme, "bottom", cfg.departed_entity, true)}
-            ${cfg.sync_entity ? b`
+            ${cfg.sync_entity || cfg.date_format_entity ? b`
                   <div class="sync-bar">
-                    <mwc-button
-                      raised
-                      label="SYNC RTC"
-                      style="--mdc-theme-primary:${theme.accent};--mdc-theme-on-primary:#0a0a0a"
-                      @click=${() => this._handleSync()}
-                    ></mwc-button>
+                    ${cfg.date_format_entity ? b`
+                          <mwc-button
+                            raised
+                            label=${this._dateFormat() === "DM" ? "DD/MM" : "MM/DD"}
+                            style="--mdc-theme-primary:${theme.accent};--mdc-theme-on-primary:#0a0a0a"
+                            @click=${() => this._handleToggleDateFormat()}
+                          ></mwc-button>
+                        ` : A}
+                    ${cfg.sync_entity ? b`
+                          <mwc-button
+                            raised
+                            label="SYNC RTC"
+                            style="--mdc-theme-primary:${theme.accent};--mdc-theme-on-primary:#0a0a0a"
+                            @click=${() => this._handleSync()}
+                          ></mwc-button>
+                        ` : A}
                   </div>
                 ` : A}
           </div>
@@ -1293,8 +1312,9 @@ TimeCircuitsCard.styles = i$3`
     .sync-bar {
       display: flex;
       justify-content: center;
-      margin-top: 6px;
-      padding-bottom: 2px;
+      gap: calc(8px * var(--scale));
+      margin-top: calc(6px * var(--scale));
+      padding-bottom: calc(2px * var(--scale));
     }
   `;
 __decorateClass([
