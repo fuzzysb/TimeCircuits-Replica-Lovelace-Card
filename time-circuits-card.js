@@ -971,6 +971,9 @@ Format: ${orderLabel} (12 digits)`,
     const present = this._presentRow();
     const bottom = this._rowFromEntity("LAST TIME DEPARTED", cfg.departed_entity);
     void this._clockTick;
+    if (!top.parsed || !bottom.parsed) {
+      console.debug("[time-circuits] render: top.parsed=", !!top.parsed, "bottom.parsed=", !!bottom.parsed, "hass=", !!this.hass);
+    }
     return b`
       <ha-card style=${this._cardStyle(theme)}>
         <div class="bezel">
@@ -1021,14 +1024,13 @@ Format: ${orderLabel} (12 digits)`,
             <div class="col-body">${this._renderYear(p2 == null ? void 0 : p2.year, color)}</div>
           </div>
           <div class="col col-ampm">
-            <div class="col-head"><span class="dymo">AM</span><span class="dymo">PM</span></div>
             <div class="col-body">${this._renderAmPm(row.am, color)}</div>
           </div>
           <div class="col col-two">
             <div class="col-head"><span class="dymo">HOUR</span><span class="dymo">MIN</span></div>
             <div class="col-body">
               ${this._renderPair((_a2 = p2 == null ? void 0 : p2.hourMin) == null ? void 0 : _a2.slice(0, 2), color)}
-              <span class="colon">:</span>
+              <span class="colon" style="color:${color}">:</span>
               ${this._renderPair((_b = p2 == null ? void 0 : p2.hourMin) == null ? void 0 : _b.slice(2, 4), color)}
             </div>
           </div>
@@ -1052,7 +1054,9 @@ Format: ${orderLabel} (12 digits)`,
   _renderAmPm(am, color) {
     return b`
       <div class="ampm-stack" style="--lamp:${color}">
+        <span class="dymo">AM</span>
         <div class="ampm-lamp ${am ? "on" : "off"}"></div>
+        <span class="dymo">PM</span>
         <div class="ampm-lamp ${am ? "off" : "on"}"></div>
       </div>
     `;
@@ -1092,7 +1096,7 @@ TimeCircuitsCard.styles = i$3`
       flex-direction: column;
       gap: 0;
       font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-      padding: 10px 8px 8px;
+      padding: 8px 6px 6px;
     }
     .card-title {
       font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -1101,21 +1105,18 @@ TimeCircuitsCard.styles = i$3`
       text-transform: uppercase;
       text-align: center;
       opacity: 0.55;
-      margin: 2px 0 8px;
+      margin: 2px 0 6px;
       font-weight: 700;
       color: #222;
     }
     .row {
       display: flex;
       flex-direction: column;
-      gap: 6px;
-      padding: 8px 4px 7px;
+      gap: 5px;
+      padding: 6px 4px 5px;
       position: relative;
     }
-    .row + .row {
-      border-top: 2px solid #5a5a5a;
-      box-shadow: inset 0 1px 0 #c0c0c0;
-    }
+    .row + .row { border-top: 1px solid #606060; }
     .segments {
       display: flex;
       align-items: flex-end;
@@ -1130,19 +1131,18 @@ TimeCircuitsCard.styles = i$3`
       flex-direction: column;
       align-items: center;
       gap: 3px;
-      padding: 0 5px;
+      padding: 0 8px;
     }
     .col + .col {
-      border-left: 3px solid #8a8a8a;
-      box-shadow: inset 1px 0 0 #c0c0c0;
+      border-left: 2px solid #787878;
+      box-shadow: inset 1px 0 0 #b8b8b8;
     }
     .col-head {
       display: flex;
       justify-content: center;
-      gap: 3px;
+      gap: 4px;
       font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     }
-    .col-ampm .col-head { flex-direction: column; gap: 2px; }
     .dymo {
       display: inline-flex;
       align-items: center;
@@ -1161,23 +1161,12 @@ TimeCircuitsCard.styles = i$3`
         inset 0 -1px 0 rgba(0,0,0,0.4),
         0 1px 1px rgba(0,0,0,0.5);
     }
-    .col-ampm .dymo { min-width: 0; width: 2em; }
     .col-one .dymo { min-width: 4em; }
     .col-body {
       display: flex;
       align-items: center;
       gap: 2px;
-      padding: 5px 5px 4px;
-      background: #000;
-      border-radius: 4px;
-      box-shadow:
-        inset 0 0 6px rgba(0,0,0,0.95),
-        inset 0 2px 3px rgba(0,0,0,0.8),
-        inset 0 -1px 0 #4a4a4a,
-        0 1px 0 #d8d8d8,
-        0 2px 3px rgba(0,0,0,0.4);
     }
-    .col-ampm .col-body { padding: 4px 6px; }
     .led-pair, .led-year {
       display: inline-flex;
       align-items: center;
@@ -1210,30 +1199,30 @@ TimeCircuitsCard.styles = i$3`
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 6px;
+      gap: 3px;
     }
     .ampm-lamp {
       width: 12px;
       height: 12px;
       border-radius: 50%;
-      background: #0a0a0a;
-      border: 2px solid #777;
+      background: #2a2a2a;
+      border: 2px solid #888;
       box-sizing: border-box;
       transition: background 0.2s, box-shadow 0.2s, border-color 0.2s;
     }
     .ampm-lamp.on {
       background: var(--lamp);
-      border-color: #aaa;
+      border-color: #ccc;
       box-shadow:
         0 0 6px var(--lamp),
         0 0 12px var(--lamp),
         inset 0 0 3px rgba(255,255,255,0.6);
     }
-    .ampm-lamp.off { background: #0a0a0a; box-shadow: none; }
+    .ampm-lamp.off { background: #1a1a1a; box-shadow: none; }
     .row-label-wrap {
       display: flex;
       justify-content: center;
-      margin-top: 3px;
+      margin-top: 2px;
     }
     .row-label-dymo {
       display: inline-block;
@@ -1254,14 +1243,14 @@ TimeCircuitsCard.styles = i$3`
     .sync-bar {
       display: flex;
       justify-content: center;
-      margin-top: 8px;
+      margin-top: 6px;
       padding-bottom: 2px;
     }
     @media (max-width: 480px) {
       .digit { font-size: 22px; }
       .colon { font-size: 22px; }
-      .col { padding: 0 3px; }
-      .row { padding: 8px 6px 6px; }
+      .col { padding: 0 5px; }
+      .row { padding: 5px 2px 4px; }
       .dymo { font-size: 6px; padding: 2px 4px; }
     }
   `;
