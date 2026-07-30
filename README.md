@@ -48,15 +48,17 @@ Use the visual editor, or define in YAML:
 ```yaml
 type: custom:time-circuits-card
 title: Time Circuits
-destination_entity: text.timecircuits_top_time
-departed_entity: text.timecircuits_bot_time
-present_entity: text.timecircuits_present_time   # optional; falls back to HA server time
-date_format_entity: select.timecircuits_dateformat
-sync_entity: button.timecircuits_sync_btn
+destination_entity: text.time_circuits_replica_destination_time
+departed_entity: text.time_circuits_replica_last_time_departed
+present_entity: text.time_circuits_replica_present_time   # optional; falls back to HA server time
+date_format_entity: select.time_circuits_replica_date_format
+sync_entity: button.time_circuits_replica_sync_rtc_time
 font_family: "'DSEG7 Classic', 'Courier New', monospace"
 theme:
-  background: "#1a1a1a"
-  digit_color: "#ff5500"
+  background: "#0a0a0a"
+  top_color: "#ff2200"
+  middle_color: "#22ff44"
+  bottom_color: "#ffcc00"
   accent: "#ffb011"
 ```
 
@@ -75,16 +77,15 @@ theme:
 
 ### Theme keys
 
-| Key              | Default     |
-| ---------------- | ----------- |
-| `background`     | `#1a1a1a`   |
-| `bezel`          | `#3a3a3a`   |
-| `label_color`    | `#c8c8c8`   |
-| `digit_color`    | `#ff5500`   |
-| `digit_dim`      | `#2a1408`   |
-| `ampm_active`    | `#ff5500`   |
-| `ampm_inactive`  | `#3a1a0a`   |
-| `accent`         | `#ffb011`   |
+| Key              | Default     | Description                          |
+| ---------------- | ----------- | ------------------------------------ |
+| `background`     | `#0a0a0a`   | Card background                      |
+| `bezel`          | `#2a2a2a`   | Outer border                         |
+| `label_color`    | `#e8e8e8`   | Row labels                           |
+| `top_color`      | `#ff2200`   | Top row (Destination Time) - red     |
+| `middle_color`   | `#22ff44`   | Middle row (Present Time) - green    |
+| `bottom_color`   | `#ffcc00`   | Bottom row (Last Time Departed) - yellow |
+| `accent`         | `#ffb011`   | SYNC RTC button                      |
 
 ## Interaction
 

@@ -601,13 +601,15 @@ function r(r2) {
   return n2({ ...r2, state: true, attribute: false });
 }
 const DEFAULT_THEME = {
-  background: "#1a1a1a",
-  bezel: "#3a3a3a",
-  label_color: "#c8c8c8",
-  digit_color: "#ff5500",
-  digit_dim: "#2a1408",
-  ampm_active: "#ff5500",
-  ampm_inactive: "#3a1a0a",
+  background: "#0a0a0a",
+  bezel: "#2a2a2a",
+  label_color: "#e8e8e8",
+  top_color: "#ff2200",
+  middle_color: "#22ff44",
+  bottom_color: "#ffcc00",
+  ampm_active_top: "#ff2200",
+  ampm_active_middle: "#22ff44",
+  ampm_active_bottom: "#ffcc00",
   accent: "#ffb011"
 };
 function resolveTheme(cfg) {
@@ -651,11 +653,10 @@ const THEME_KEYS = [
   { key: "background", label: "Background" },
   { key: "bezel", label: "Bezel" },
   { key: "label_color", label: "Labels" },
-  { key: "digit_color", label: "Digit (lit)" },
-  { key: "digit_dim", label: "Digit (dim)" },
-  { key: "ampm_active", label: "AM/PM active" },
-  { key: "ampm_inactive", label: "AM/PM inactive" },
-  { key: "accent", label: "Accent" }
+  { key: "top_color", label: "Top (Destination)" },
+  { key: "middle_color", label: "Middle (Present)" },
+  { key: "bottom_color", label: "Bottom (Departed)" },
+  { key: "accent", label: "Accent / button" }
 ];
 let TimeCircuitsEditor = class extends i {
   constructor() {
@@ -667,10 +668,11 @@ let TimeCircuitsEditor = class extends i {
     this._cfg = { ...cfg };
   }
   _fire(changed) {
-    const ev = new CustomEvent("config-changed", {
-      detail: { config: { ...this._cfg, ...changed } }
-    });
-    this.dispatchEvent(ev);
+    this.dispatchEvent(
+      new CustomEvent("config-changed", {
+        detail: { config: { ...this._cfg, ...changed } }
+      })
+    );
   }
   _entity(kind, key) {
     const entities = this.hass ? Object.keys(this.hass.states) : [];
@@ -684,22 +686,20 @@ let TimeCircuitsEditor = class extends i {
         @closed=${(e2) => e2.stopPropagation()}
         clearable
       >
-        ${filtered.map(
-      (e2) => b`<mwc-list-item .value=${e2}>${e2}</mwc-list-item>`
-    )}
+        ${filtered.map((e2) => b`<mwc-list-item .value=${e2}>${e2}</mwc-list-item>`)}
       </ha-select>
     `;
   }
   _labelFor(key) {
     switch (key) {
       case "destination_entity":
-        return "Destination Time (top)";
+        return "Destination Time (top, red)";
       case "departed_entity":
-        return "Last Time Departed (bottom)";
+        return "Last Time Departed (bottom, yellow)";
       case "present_entity":
-        return "Present Time (middle, optional)";
+        return "Present Time (middle, green)";
       case "date_format_entity":
-        return "Date Format select";
+        return "Date Format select (MD/DM)";
       case "sync_entity":
         return "Sync RTC button";
       default:
@@ -755,19 +755,27 @@ let TimeCircuitsEditor = class extends i {
                 `
     ) : b`
               <div class="color-row">
-                <span>Digit color</span>
+                <span>Top (Destination)</span>
                 <input
                   type="color"
-                  .value=${theme.digit_color}
-                  @input=${(e2) => this._fire({ theme: { ...theme, digit_color: e2.target.value } })}
+                  .value=${theme.top_color}
+                  @input=${(e2) => this._fire({ theme: { ...theme, top_color: e2.target.value } })}
                 />
               </div>
               <div class="color-row">
-                <span>Background</span>
+                <span>Middle (Present)</span>
                 <input
                   type="color"
-                  .value=${theme.background}
-                  @input=${(e2) => this._fire({ theme: { ...theme, background: e2.target.value } })}
+                  .value=${theme.middle_color}
+                  @input=${(e2) => this._fire({ theme: { ...theme, middle_color: e2.target.value } })}
+                />
+              </div>
+              <div class="color-row">
+                <span>Bottom (Departed)</span>
+                <input
+                  type="color"
+                  .value=${theme.bottom_color}
+                  @input=${(e2) => this._fire({ theme: { ...theme, bottom_color: e2.target.value } })}
                 />
               </div>
             `}
@@ -829,10 +837,10 @@ let TimeCircuitsCard = class extends i {
   static getStubConfig() {
     return {
       title: "Time Circuits",
-      destination_entity: "text.timecircuits_top_time",
-      departed_entity: "text.timecircuits_bot_time",
-      date_format_entity: "select.timecircuits_dateformat",
-      sync_entity: "button.timecircuits_sync_btn"
+      destination_entity: "text.time_circuits_replica_destination_time",
+      departed_entity: "text.time_circuits_replica_last_time_departed",
+      date_format_entity: "select.time_circuits_replica_date_format",
+      sync_entity: "button.time_circuits_replica_sync_rtc_time"
     };
   }
   setConfig(cfg) {
@@ -840,7 +848,7 @@ let TimeCircuitsCard = class extends i {
     this._cfg = cfg;
   }
   getCardSize() {
-    return 4;
+    return 5;
   }
   connectedCallback() {
     super.connectedCallback();
@@ -861,7 +869,6 @@ let TimeCircuitsCard = class extends i {
     if (st && st.state && (st.state === "MD" || st.state === "DM")) return st.state;
     return DATE_FORMAT_MD;
   }
-  /** Build the present-time row: prefer present_entity, else HA server time. */
   _presentRow() {
     const fmt = this._dateFormat();
     const st = this._state(this._cfg.present_entity);
@@ -902,6 +909,11 @@ let TimeCircuitsCard = class extends i {
       am: isAm(parsed.hourMin)
     };
   }
+  _rowColor(kind, theme) {
+    if (kind === "top") return theme.top_color;
+    if (kind === "middle") return theme.middle_color;
+    return theme.bottom_color;
+  }
   _handleSync() {
     const entityId = this._cfg.sync_entity;
     if (!entityId || !this.hass) return;
@@ -916,8 +928,11 @@ let TimeCircuitsCard = class extends i {
     const st = this._state(entityId);
     const parsed = parseTimeState(st == null ? void 0 : st.state);
     const initialValue = parsed ? `${parsed.monthDay}${parsed.year}${parsed.hourMin}` : "010120250000";
-    const v2 = window.prompt(`Set ${label ?? entityId}
-Format: MMDDYYYYHHMM (12 digits)`, initialValue);
+    const v2 = window.prompt(
+      `Set ${label ?? entityId}
+Format: MMDDYYYYHHMM (12 digits)`,
+      initialValue
+    );
     if (v2 == null) return;
     if (!/^\d{12}$/.test(v2.trim())) {
       window.alert("Value must be exactly 12 digits: MMDDYYYYHHMM");
@@ -933,86 +948,90 @@ Format: MMDDYYYYHHMM (12 digits)`, initialValue);
     const bottom = this._rowFromEntity("LAST TIME DEPARTED", cfg.departed_entity);
     void this._clockTick;
     return b`
-      <ha-card
-        style=${this._cardStyle(theme, cfg)}
-        @action=${() => {
-    }}
-      >
-        <div class="panel" style=${this._panelStyle(theme)}>
-          ${cfg.title ? b`<div class="card-title" style="color:${theme.label_color}">${cfg.title}</div>` : A}
-          ${this._renderRow(top, theme, cfg.destination_entity, true)}
-          ${this._renderRow(present, theme, cfg.present_entity, false)}
-          ${this._renderRow(bottom, theme, cfg.departed_entity, true)}
-          ${cfg.sync_entity ? b`
-                <div class="sync-bar">
-                  <mwc-button
-                    raised
-                    label="SYNC RTC"
-                    style="--mdc-theme-primary:${theme.accent};--mdc-theme-on-primary:#1a1a1a"
-                    @click=${() => this._handleSync()}
-                  ></mwc-button>
-                </div>
-              ` : A}
+      <ha-card style=${this._cardStyle(theme)}>
+        <div class="bezel">
+          <div class="panel" style=${this._panelStyle()}>
+            ${cfg.title ? b`<div class="card-title" style="color:${theme.label_color}">
+                  ${cfg.title}
+                </div>` : A}
+            ${this._renderRow(top, theme, "top", cfg.destination_entity, true)}
+            ${this._renderRow(present, theme, "middle", cfg.present_entity, false)}
+            ${this._renderRow(bottom, theme, "bottom", cfg.departed_entity, true)}
+            ${cfg.sync_entity ? b`
+                  <div class="sync-bar">
+                    <mwc-button
+                      raised
+                      label="SYNC RTC"
+                      style="--mdc-theme-primary:${theme.accent};--mdc-theme-on-primary:#0a0a0a"
+                      @click=${() => this._handleSync()}
+                    ></mwc-button>
+                  </div>
+                ` : A}
+          </div>
         </div>
       </ha-card>
     `;
   }
-  _renderRow(row, theme, entityId, editable) {
+  _renderRow(row, theme, kind, entityId, editable) {
+    const color = this._rowColor(kind, theme);
     return b`
-      <div class="row" style="color:${theme.label_color}">
-        <div class="row-label">${row.label}</div>
+      <div class="row">
+        <div class="row-label" style="color:${theme.label_color}">${row.label}</div>
         <div class="segments">
           ${row.parsed ? b`
-                <div class="seg-group" @click=${() => editable && this._editRow(entityId, row.label)}>
-                  ${this._renderSegment(row.displayMD ?? row.parsed.monthDay, theme, false)}
+                <div
+                  class="seg-group ${editable ? "editable" : ""}"
+                  @click=${() => editable && this._editRow(entityId, row.label)}
+                >
+                  ${this._renderSegment(row.displayMD ?? row.parsed.monthDay, color, false)}
                 </div>
-                <div class="seg-group" @click=${() => editable && this._editRow(entityId, row.label)}>
-                  ${this._renderSegment(row.parsed.year, theme, false)}
+                <div
+                  class="seg-group ${editable ? "editable" : ""}"
+                  @click=${() => editable && this._editRow(entityId, row.label)}
+                >
+                  ${this._renderSegment(row.parsed.year, color, false)}
                 </div>
-                <div class="seg-group" @click=${() => editable && this._editRow(entityId, row.label)}>
-                  ${this._renderSegment(row.parsed.hourMin, theme, true)}
+                <div
+                  class="seg-group ${editable ? "editable" : ""}"
+                  @click=${() => editable && this._editRow(entityId, row.label)}
+                >
+                  ${this._renderSegment(row.parsed.hourMin, color, true)}
                 </div>
-                ${this._renderAmPm(row.am, theme)}
-              ` : b`<div class="seg-group empty">--:--</div>`}
+                ${this._renderAmPm(row.am, color)}
+              ` : b`<div class="seg-group empty" style="color:#444">--:--</div>`}
         </div>
       </div>
     `;
   }
-  _renderSegment(value, theme, withColon) {
+  _renderSegment(value, color, withColon) {
     const chars = (value + "    ").slice(0, 4).split("");
     return b`
-      <div class="led-segment">
-        ${chars.map((c2, i2) => b`<span class="digit" style="color:${theme.digit_color}">${c2}</span>`)}
-        ${withColon ? b`<span class="colon" style="color:${theme.digit_color}">:</span>` : A}
+      <div class="led-segment" style="color:${color}">
+        ${chars.map((c2) => b`<span class="digit">${c2}</span>`)}
+        ${withColon ? b`<span class="colon">:</span>` : A}
       </div>
     `;
   }
-  _renderAmPm(am, theme) {
+  _renderAmPm(am, color) {
     return b`
-      <div class="ampm">
-        <span
-          class="ampm-label ${am ? "on" : "off"}"
-          style="color:${am ? theme.ampm_active : theme.ampm_inactive}"
-        >AM</span>
-        <span
-          class="ampm-label ${am ? "off" : "on"}"
-          style="color:${am ? theme.ampm_inactive : theme.ampm_active}"
-        >PM</span>
+      <div class="ampm" style="color:${color}">
+        <span class="ampm-label ${am ? "on" : "off"}">AM</span>
+        <span class="ampm-label ${am ? "off" : "on"}">PM</span>
       </div>
     `;
   }
-  _cardStyle(theme, cfg) {
+  _cardStyle(theme) {
     return [
       `background:${theme.background}`,
-      `border:6px solid ${theme.bezel}`,
-      `border-radius:14px`,
+      `border:4px solid ${theme.bezel}`,
+      `border-radius:16px`,
       `padding:0`,
       `overflow:hidden`
     ].join(";");
   }
-  _panelStyle(theme) {
+  _panelStyle() {
     return [
-      `padding:18px 16px 14px`,
+      `padding:16px 18px 12px`,
       `font-family:${this._cfg.font_family ?? "'DSEG7 Classic', 'Courier New', monospace"}`
     ].join(";");
   }
@@ -1020,39 +1039,49 @@ Format: MMDDYYYYHHMM (12 digits)`, initialValue);
 TimeCircuitsCard.styles = i$3`
     :host { display: block; }
     ha-card { display: block; }
-    .panel { display: flex; flex-direction: column; gap: 10px; }
+    .bezel {
+      border: 2px solid #000;
+      border-radius: 12px;
+      margin: 6px;
+      background: #000;
+      box-shadow: inset 0 0 12px rgba(0,0,0,0.9);
+    }
+    .panel { display: flex; flex-direction: column; gap: 8px; }
     .card-title {
-      font-size: 14px;
-      letter-spacing: 2px;
+      font-size: 13px;
+      letter-spacing: 3px;
       text-transform: uppercase;
       text-align: center;
-      opacity: 0.7;
-      margin-bottom: 4px;
+      opacity: 0.6;
+      margin-bottom: 6px;
+      font-weight: bold;
     }
     .row {
       display: flex;
       flex-direction: column;
-      gap: 4px;
-      padding: 6px 10px;
-      background: rgba(0,0,0,0.25);
-      border-radius: 8px;
+      gap: 2px;
+      padding: 8px 12px;
+      background: rgba(0,0,0,0.6);
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.04);
     }
     .row-label {
-      font-size: 11px;
-      letter-spacing: 2px;
-      opacity: 0.6;
+      font-size: 10px;
+      letter-spacing: 2.5px;
+      opacity: 0.55;
       text-transform: uppercase;
+      font-weight: bold;
     }
     .segments {
       display: flex;
       align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
+      gap: 6px;
+      flex-wrap: nowrap;
     }
-    .seg-group { cursor: pointer; }
+    .seg-group { cursor: default; }
+    .seg-group.editable { cursor: pointer; }
     .seg-group.empty {
-      color: #555;
-      font-size: 22px;
+      font-size: 26px;
       letter-spacing: 2px;
     }
     .led-segment {
@@ -1060,43 +1089,48 @@ TimeCircuitsCard.styles = i$3`
       align-items: center;
       font-variant-numeric: tabular-nums;
       font-weight: bold;
-      letter-spacing: 1px;
-      text-shadow: 0 0 6px currentColor;
+      letter-spacing: 2px;
     }
     .led-segment .digit {
-      font-size: 30px;
+      font-size: 34px;
       line-height: 1;
-      min-width: 0.62em;
+      min-width: 0.6em;
       text-align: center;
-      text-shadow: 0 0 8px currentColor, 0 0 2px currentColor;
+      text-shadow:
+        0 0 6px currentColor,
+        0 0 14px currentColor,
+        0 0 2px currentColor;
     }
     .led-segment .colon {
-      font-size: 30px;
-      padding: 0 4px;
-      text-shadow: 0 0 8px currentColor;
+      font-size: 34px;
+      padding: 0 2px;
+      text-shadow: 0 0 8px currentColor, 0 0 16px currentColor;
+      animation: blink 1s steps(2, start) infinite;
     }
+    @keyframes blink { 50% { opacity: 0.25; } }
     .ampm {
       display: flex;
       flex-direction: column;
-      gap: 2px;
-      margin-left: 8px;
+      gap: 1px;
+      margin-left: 10px;
+      font-weight: bold;
     }
     .ampm-label {
-      font-size: 12px;
-      font-weight: bold;
+      font-size: 11px;
       letter-spacing: 1px;
-      opacity: 0.5;
+      text-shadow: 0 0 4px currentColor;
     }
     .ampm-label.on { opacity: 1; }
-    .ampm-label.off { opacity: 0.25; }
+    .ampm-label.off { opacity: 0.2; }
     .sync-bar {
       display: flex;
       justify-content: center;
-      margin-top: 6px;
+      margin-top: 8px;
     }
     @media (max-width: 480px) {
-      .led-segment .digit { font-size: 24px; }
-      .led-segment .colon { font-size: 24px; }
+      .led-segment .digit { font-size: 26px; }
+      .led-segment .colon { font-size: 26px; }
+      .segments { gap: 4px; }
     }
   `;
 __decorateClass([
@@ -1128,8 +1162,8 @@ if (window.customCards) {
 }
 console.info(
   `%c TIME-CIRCUITS-CARD %c v${VERSION} `,
-  "color: white; background: #ff5500; font-weight: bold;",
-  "color: #ff5500; background: black; font-weight: bold;"
+  "color: white; background: #ff2200; font-weight: bold;",
+  "color: #ff2200; background: black; font-weight: bold;"
 );
 export {
   TimeCircuitsCard

@@ -5,7 +5,7 @@ export interface TimeCircuitsConfig {
   departed_entity?: string;
   /** Entity for the middle row "Present Time". Optional - falls back to HA server time. */
   present_entity?: string;
-  /** Entity for the date-format select (e.g. select.timecircuits_dateformat). Optional. */
+  /** Entity for the date-format select (e.g. select.time_circuits_replica_date_format). Optional. */
   date_format_entity?: string;
   /** Entity for the sync-RTC button (e.g. button.timecircuits_sync_btn). Optional. */
   sync_entity?: string;
@@ -14,7 +14,7 @@ export interface TimeCircuitsConfig {
   title?: string;
   /** Font family for the LED digits. */
   font_family?: string;
-  /** Theme override for the LED segments (see TimeCircuitsTheme). */
+  /** Theme override (see TimeCircuitsTheme). */
   theme?: Partial<TimeCircuitsTheme>;
 }
 
@@ -25,28 +25,34 @@ export interface TimeCircuitsTheme {
   bezel: string;
   /** Row label text color */
   label_color: string;
-  /** LED digit color - default lit */
-  digit_color: string;
-  /** LED digit color - dimmed (unlit segments background) */
-  digit_dim: string;
-  /** AM/PM indicator color when active */
-  ampm_active: string;
-  /** AM/PM indicator color when inactive */
-  ampm_inactive: string;
+  /** Top row (Destination Time) LED color */
+  top_color: string;
+  /** Middle row (Present Time) LED color */
+  middle_color: string;
+  /** Bottom row (Last Time Departed) LED color */
+  bottom_color: string;
+  /** AM/PM indicator color when active (per-row colors inherited) */
+  ampm_active_top: string;
+  ampm_active_middle: string;
+  ampm_active_bottom: string;
   /** Toggle / button accent color */
   accent: string;
 }
 
 export const DEFAULT_THEME: TimeCircuitsTheme = {
-  background: "#1a1a1a",
-  bezel: "#3a3a3a",
-  label_color: "#c8c8c8",
-  digit_color: "#ff5500",
-  digit_dim: "#2a1408",
-  ampm_active: "#ff5500",
-  ampm_inactive: "#3a1a0a",
+  background: "#0a0a0a",
+  bezel: "#2a2a2a",
+  label_color: "#e8e8e8",
+  top_color: "#ff2200",
+  middle_color: "#22ff44",
+  bottom_color: "#ffcc00",
+  ampm_active_top: "#ff2200",
+  ampm_active_middle: "#22ff44",
+  ampm_active_bottom: "#ffcc00",
   accent: "#ffb011",
 };
+
+export type RowKind = "top" | "middle" | "bottom";
 
 export function resolveTheme(cfg?: Partial<TimeCircuitsTheme>): TimeCircuitsTheme {
   return { ...DEFAULT_THEME, ...(cfg || {}) };

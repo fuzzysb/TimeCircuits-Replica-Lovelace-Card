@@ -9,19 +9,18 @@ import {
   isAm,
   pad2,
   resolveTheme,
+  RowKind,
   DATE_FORMAT_MD,
 } from "./types";
 import "./time-circuits-editor";
 
 const VERSION = "1.0.0";
 
-// Name of the custom card as referenced in the visual editor / Lovelace config.
 const CARD_NAME = "time-circuits-card";
 
 interface RowModel {
   label: string;
   parsed?: ParsedTime;
-  /** Display order string for the MMDD group (after applying date format). */
   displayMD?: string;
   am: boolean;
 }
@@ -41,10 +40,10 @@ export class TimeCircuitsCard extends LitElement {
   static getStubConfig(): Partial<TimeCircuitsConfig> {
     return {
       title: "Time Circuits",
-      destination_entity: "text.timecircuits_top_time",
-      departed_entity: "text.timecircuits_bot_time",
-      date_format_entity: "select.timecircuits_dateformat",
-      sync_entity: "button.timecircuits_sync_btn",
+      destination_entity: "text.time_circuits_replica_destination_time",
+      departed_entity: "text.time_circuits_replica_last_time_departed",
+      date_format_entity: "select.time_circuits_replica_date_format",
+      sync_entity: "button.time_circuits_replica_sync_rtc_time",
     };
   }
 
@@ -54,12 +53,11 @@ export class TimeCircuitsCard extends LitElement {
   }
 
   getCardSize() {
-    return 4;
+    return 5;
   }
 
   connectedCallback() {
     super.connectedCallback();
-    // 1s tick drives the present-time fallback (HA server time).
     this._clockTimer = window.setInterval(() => {
       this._clockTick++;
     }, 1000);
@@ -81,7 +79,6 @@ export class TimeCircuitsCard extends LitElement {
     return DATE_FORMAT_MD;
   }
 
-  /** Build the present-time row: prefer present_entity, else HA server time. */
   private _presentRow(): RowModel {
     const fmt = this._dateFormat();
     const st = this._state(this._cfg.present_entity);
@@ -96,7 +93,6 @@ export class TimeCircuitsCard extends LitElement {
         };
       }
     }
-    // Fallback: HA server time (this.hass.locale or just JS Date in local TZ).
     const now = new Date();
     let md: string;
     if (fmt === "DM") md = pad2(now.getDate()) + pad2(now.getMonth() + 1);
@@ -112,10 +108,7 @@ export class TimeCircuitsCard extends LitElement {
     };
   }
 
-  private _rowFromEntity(
-    label: string,
-    entityId?: string,
-  ): RowModel {
+  private _rowFromEntity(label: string, entityId?: string): RowModel {
     const st = this._state(entityId);
     const parsed = parseTimeState(st?.state);
     if (!parsed) return { label, am: true };
@@ -126,6 +119,12 @@ export class TimeCircuitsCard extends LitElement {
       displayMD: toDisplayOrder(parsed.monthDay, fmt),
       am: isAm(parsed.hourMin),
     };
+  }
+
+  private _rowColor(kind: RowKind, theme: TimeCircuitsTheme): string {
+    if (kind === "top") return theme.top_color;
+    if (kind === "middle") return theme.middle_color;
+    return theme.bottom_color;
   }
 
   private _handleSync() {
@@ -146,7 +145,10 @@ export class TimeCircuitsCard extends LitElement {
     const initialValue = parsed
       ? `${parsed.monthDay}${parsed.year}${parsed.hourMin}`
       : "010120250000";
-    const v = window.prompt(`Set ${label ?? entityId}\nFormat: MMDDYYYYHHMM (12 digits)`, initialValue);
+    const v = window.prompt(
+      `Set ${label ?? entityId}\nFormat: MMDDYYYYHHMM (12 digits)`,
+      initialValue,
+    );
     if (v == null) return;
     if (!/^\d{12}$/.test(v.trim())) {
       window.alert("Value must be exactly 12 digits: MMDDYYYYHHMM");
@@ -163,33 +165,33 @@ export class TimeCircuitsCard extends LitElement {
     const present = this._presentRow();
     const bottom = this._rowFromEntity("LAST TIME DEPARTED", cfg.departed_entity);
 
-    // Touch _clockTick so Lit re-renders every second when using fallback.
     void this._clockTick;
 
     return html`
-      <ha-card
-        style=${this._cardStyle(theme, cfg)}
-        @action=${() => {}}
-      >
-        <div class="panel" style=${this._panelStyle(theme)}>
-          ${cfg.title
-            ? html`<div class="card-title" style="color:${theme.label_color}">${cfg.title}</div>`
-            : nothing}
-          ${this._renderRow(top, theme, cfg.destination_entity, true)}
-          ${this._renderRow(present, theme, cfg.present_entity, false)}
-          ${this._renderRow(bottom, theme, cfg.departed_entity, true)}
-          ${cfg.sync_entity
-            ? html`
-                <div class="sync-bar">
-                  <mwc-button
-                    raised
-                    label="SYNC RTC"
-                    style="--mdc-theme-primary:${theme.accent};--mdc-theme-on-primary:#1a1a1a"
-                    @click=${() => this._handleSync()}
-                  ></mwc-button>
-                </div>
-              `
-            : nothing}
+      <ha-card style=${this._cardStyle(theme)}>
+        <div class="bezel">
+          <div class="panel" style=${this._panelStyle()}>
+            ${cfg.title
+              ? html`<div class="card-title" style="color:${theme.label_color}">
+                  ${cfg.title}
+                </div>`
+              : nothing}
+            ${this._renderRow(top, theme, "top", cfg.destination_entity, true)}
+            ${this._renderRow(present, theme, "middle", cfg.present_entity, false)}
+            ${this._renderRow(bottom, theme, "bottom", cfg.departed_entity, true)}
+            ${cfg.sync_entity
+              ? html`
+                  <div class="sync-bar">
+                    <mwc-button
+                      raised
+                      label="SYNC RTC"
+                      style="--mdc-theme-primary:${theme.accent};--mdc-theme-on-primary:#0a0a0a"
+                      @click=${() => this._handleSync()}
+                    ></mwc-button>
+                  </div>
+                `
+              : nothing}
+          </div>
         </div>
       </ha-card>
     `;
@@ -198,70 +200,75 @@ export class TimeCircuitsCard extends LitElement {
   private _renderRow(
     row: RowModel,
     theme: TimeCircuitsTheme,
+    kind: RowKind,
     entityId?: string,
     editable?: boolean,
   ): TemplateResult {
+    const color = this._rowColor(kind, theme);
     return html`
-      <div class="row" style="color:${theme.label_color}">
-        <div class="row-label">${row.label}</div>
+      <div class="row">
+        <div class="row-label" style="color:${theme.label_color}">${row.label}</div>
         <div class="segments">
           ${row.parsed
             ? html`
-                <div class="seg-group" @click=${() => editable && this._editRow(entityId, row.label)}>
-                  ${this._renderSegment(row.displayMD ?? row.parsed.monthDay, theme, false)}
+                <div
+                  class="seg-group ${editable ? "editable" : ""}"
+                  @click=${() => editable && this._editRow(entityId, row.label)}
+                >
+                  ${this._renderSegment(row.displayMD ?? row.parsed.monthDay, color, false)}
                 </div>
-                <div class="seg-group" @click=${() => editable && this._editRow(entityId, row.label)}>
-                  ${this._renderSegment(row.parsed.year, theme, false)}
+                <div
+                  class="seg-group ${editable ? "editable" : ""}"
+                  @click=${() => editable && this._editRow(entityId, row.label)}
+                >
+                  ${this._renderSegment(row.parsed.year, color, false)}
                 </div>
-                <div class="seg-group" @click=${() => editable && this._editRow(entityId, row.label)}>
-                  ${this._renderSegment(row.parsed.hourMin, theme, true)}
+                <div
+                  class="seg-group ${editable ? "editable" : ""}"
+                  @click=${() => editable && this._editRow(entityId, row.label)}
+                >
+                  ${this._renderSegment(row.parsed.hourMin, color, true)}
                 </div>
-                ${this._renderAmPm(row.am, theme)}
+                ${this._renderAmPm(row.am, color)}
               `
-            : html`<div class="seg-group empty">--:--</div>`}
+            : html`<div class="seg-group empty" style="color:#444">--:--</div>`}
         </div>
       </div>
     `;
   }
 
-  private _renderSegment(value: string, theme: TimeCircuitsTheme, withColon: boolean): TemplateResult {
+  private _renderSegment(value: string, color: string, withColon: boolean): TemplateResult {
     const chars = (value + "    ").slice(0, 4).split("");
     return html`
-      <div class="led-segment">
-        ${chars.map((c, i) => html`<span class="digit" style="color:${theme.digit_color}">${c}</span>`)}
-        ${withColon ? html`<span class="colon" style="color:${theme.digit_color}">:</span>` : nothing}
+      <div class="led-segment" style="color:${color}">
+        ${chars.map((c) => html`<span class="digit">${c}</span>`)}
+        ${withColon ? html`<span class="colon">:</span>` : nothing}
       </div>
     `;
   }
 
-  private _renderAmPm(am: boolean, theme: TimeCircuitsTheme): TemplateResult {
+  private _renderAmPm(am: boolean, color: string): TemplateResult {
     return html`
-      <div class="ampm">
-        <span
-          class="ampm-label ${am ? "on" : "off"}"
-          style="color:${am ? theme.ampm_active : theme.ampm_inactive}"
-        >AM</span>
-        <span
-          class="ampm-label ${am ? "off" : "on"}"
-          style="color:${am ? theme.ampm_inactive : theme.ampm_active}"
-        >PM</span>
+      <div class="ampm" style="color:${color}">
+        <span class="ampm-label ${am ? "on" : "off"}">AM</span>
+        <span class="ampm-label ${am ? "off" : "on"}">PM</span>
       </div>
     `;
   }
 
-  private _cardStyle(theme: TimeCircuitsTheme, cfg: TimeCircuitsConfig): string {
+  private _cardStyle(theme: TimeCircuitsTheme): string {
     return [
       `background:${theme.background}`,
-      `border:6px solid ${theme.bezel}`,
-      `border-radius:14px`,
+      `border:4px solid ${theme.bezel}`,
+      `border-radius:16px`,
       `padding:0`,
       `overflow:hidden`,
     ].join(";");
   }
 
-  private _panelStyle(theme: TimeCircuitsTheme): string {
+  private _panelStyle(): string {
     return [
-      `padding:18px 16px 14px`,
+      `padding:16px 18px 12px`,
       `font-family:${this._cfg.font_family ?? "'DSEG7 Classic', 'Courier New', monospace"}`,
     ].join(";");
   }
@@ -269,39 +276,49 @@ export class TimeCircuitsCard extends LitElement {
   static styles = css`
     :host { display: block; }
     ha-card { display: block; }
-    .panel { display: flex; flex-direction: column; gap: 10px; }
+    .bezel {
+      border: 2px solid #000;
+      border-radius: 12px;
+      margin: 6px;
+      background: #000;
+      box-shadow: inset 0 0 12px rgba(0,0,0,0.9);
+    }
+    .panel { display: flex; flex-direction: column; gap: 8px; }
     .card-title {
-      font-size: 14px;
-      letter-spacing: 2px;
+      font-size: 13px;
+      letter-spacing: 3px;
       text-transform: uppercase;
       text-align: center;
-      opacity: 0.7;
-      margin-bottom: 4px;
+      opacity: 0.6;
+      margin-bottom: 6px;
+      font-weight: bold;
     }
     .row {
       display: flex;
       flex-direction: column;
-      gap: 4px;
-      padding: 6px 10px;
-      background: rgba(0,0,0,0.25);
-      border-radius: 8px;
+      gap: 2px;
+      padding: 8px 12px;
+      background: rgba(0,0,0,0.6);
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.04);
     }
     .row-label {
-      font-size: 11px;
-      letter-spacing: 2px;
-      opacity: 0.6;
+      font-size: 10px;
+      letter-spacing: 2.5px;
+      opacity: 0.55;
       text-transform: uppercase;
+      font-weight: bold;
     }
     .segments {
       display: flex;
       align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
+      gap: 6px;
+      flex-wrap: nowrap;
     }
-    .seg-group { cursor: pointer; }
+    .seg-group { cursor: default; }
+    .seg-group.editable { cursor: pointer; }
     .seg-group.empty {
-      color: #555;
-      font-size: 22px;
+      font-size: 26px;
       letter-spacing: 2px;
     }
     .led-segment {
@@ -309,43 +326,48 @@ export class TimeCircuitsCard extends LitElement {
       align-items: center;
       font-variant-numeric: tabular-nums;
       font-weight: bold;
-      letter-spacing: 1px;
-      text-shadow: 0 0 6px currentColor;
+      letter-spacing: 2px;
     }
     .led-segment .digit {
-      font-size: 30px;
+      font-size: 34px;
       line-height: 1;
-      min-width: 0.62em;
+      min-width: 0.6em;
       text-align: center;
-      text-shadow: 0 0 8px currentColor, 0 0 2px currentColor;
+      text-shadow:
+        0 0 6px currentColor,
+        0 0 14px currentColor,
+        0 0 2px currentColor;
     }
     .led-segment .colon {
-      font-size: 30px;
-      padding: 0 4px;
-      text-shadow: 0 0 8px currentColor;
+      font-size: 34px;
+      padding: 0 2px;
+      text-shadow: 0 0 8px currentColor, 0 0 16px currentColor;
+      animation: blink 1s steps(2, start) infinite;
     }
+    @keyframes blink { 50% { opacity: 0.25; } }
     .ampm {
       display: flex;
       flex-direction: column;
-      gap: 2px;
-      margin-left: 8px;
+      gap: 1px;
+      margin-left: 10px;
+      font-weight: bold;
     }
     .ampm-label {
-      font-size: 12px;
-      font-weight: bold;
+      font-size: 11px;
       letter-spacing: 1px;
-      opacity: 0.5;
+      text-shadow: 0 0 4px currentColor;
     }
     .ampm-label.on { opacity: 1; }
-    .ampm-label.off { opacity: 0.25; }
+    .ampm-label.off { opacity: 0.2; }
     .sync-bar {
       display: flex;
       justify-content: center;
-      margin-top: 6px;
+      margin-top: 8px;
     }
     @media (max-width: 480px) {
-      .led-segment .digit { font-size: 24px; }
-      .led-segment .colon { font-size: 24px; }
+      .led-segment .digit { font-size: 26px; }
+      .led-segment .colon { font-size: 26px; }
+      .segments { gap: 4px; }
     }
   `;
 }
@@ -356,7 +378,6 @@ declare global {
   }
 }
 
-// ---- Register with the Lovelace customCards system ----
 if ((window as any).customCards) {
   (window as any).customCards.push({
     type: CARD_NAME,
@@ -375,6 +396,6 @@ if ((window as any).customCards) {
 
 console.info(
   `%c TIME-CIRCUITS-CARD %c v${VERSION} `,
-  "color: white; background: #ff5500; font-weight: bold;",
-  "color: #ff5500; background: black; font-weight: bold;",
+  "color: white; background: #ff2200; font-weight: bold;",
+  "color: #ff2200; background: black; font-weight: bold;",
 );

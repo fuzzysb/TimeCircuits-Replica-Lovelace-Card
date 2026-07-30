@@ -1,4 +1,4 @@
-import { LitElement, html, nothing, css } from "lit";
+import { LitElement, html, css } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import type { TimeCircuitsConfig, TimeCircuitsTheme } from "./types";
 import { DEFAULT_THEME } from "./types";
@@ -7,11 +7,10 @@ const THEME_KEYS: { key: keyof TimeCircuitsTheme; label: string }[] = [
   { key: "background", label: "Background" },
   { key: "bezel", label: "Bezel" },
   { key: "label_color", label: "Labels" },
-  { key: "digit_color", label: "Digit (lit)" },
-  { key: "digit_dim", label: "Digit (dim)" },
-  { key: "ampm_active", label: "AM/PM active" },
-  { key: "ampm_inactive", label: "AM/PM inactive" },
-  { key: "accent", label: "Accent" },
+  { key: "top_color", label: "Top (Destination)" },
+  { key: "middle_color", label: "Middle (Present)" },
+  { key: "bottom_color", label: "Bottom (Departed)" },
+  { key: "accent", label: "Accent / button" },
 ];
 
 @customElement("time-circuits-editor")
@@ -25,10 +24,11 @@ export class TimeCircuitsEditor extends LitElement {
   }
 
   private _fire(changed: Partial<TimeCircuitsConfig>) {
-    const ev = new CustomEvent("config-changed", {
-      detail: { config: { ...this._cfg, ...changed } },
-    });
-    this.dispatchEvent(ev);
+    this.dispatchEvent(
+      new CustomEvent("config-changed", {
+        detail: { config: { ...this._cfg, ...changed } },
+      }),
+    );
   }
 
   private _entity(kind: "text" | "select" | "button", key: keyof TimeCircuitsConfig) {
@@ -43,19 +43,17 @@ export class TimeCircuitsEditor extends LitElement {
         @closed=${(e: any) => e.stopPropagation()}
         clearable
       >
-        ${filtered.map(
-          (e) => html`<mwc-list-item .value=${e}>${e}</mwc-list-item>`,
-        )}
+        ${filtered.map((e) => html`<mwc-list-item .value=${e}>${e}</mwc-list-item>`)}
       </ha-select>
     `;
   }
 
   private _labelFor(key: keyof TimeCircuitsConfig): string {
     switch (key) {
-      case "destination_entity": return "Destination Time (top)";
-      case "departed_entity": return "Last Time Departed (bottom)";
-      case "present_entity": return "Present Time (middle, optional)";
-      case "date_format_entity": return "Date Format select";
+      case "destination_entity": return "Destination Time (top, red)";
+      case "departed_entity": return "Last Time Departed (bottom, yellow)";
+      case "present_entity": return "Present Time (middle, green)";
+      case "date_format_entity": return "Date Format select (MD/DM)";
       case "sync_entity": return "Sync RTC button";
       default: return String(key);
     }
@@ -113,21 +111,30 @@ export class TimeCircuitsEditor extends LitElement {
               )
             : html`
               <div class="color-row">
-                <span>Digit color</span>
+                <span>Top (Destination)</span>
                 <input
                   type="color"
-                  .value=${theme.digit_color}
+                  .value=${theme.top_color}
                   @input=${(e: any) =>
-                    this._fire({ theme: { ...theme, digit_color: e.target.value } })}
+                    this._fire({ theme: { ...theme, top_color: e.target.value } })}
                 />
               </div>
               <div class="color-row">
-                <span>Background</span>
+                <span>Middle (Present)</span>
                 <input
                   type="color"
-                  .value=${theme.background}
+                  .value=${theme.middle_color}
                   @input=${(e: any) =>
-                    this._fire({ theme: { ...theme, background: e.target.value } })}
+                    this._fire({ theme: { ...theme, middle_color: e.target.value } })}
+                />
+              </div>
+              <div class="color-row">
+                <span>Bottom (Departed)</span>
+                <input
+                  type="color"
+                  .value=${theme.bottom_color}
+                  @input=${(e: any) =>
+                    this._fire({ theme: { ...theme, bottom_color: e.target.value } })}
                 />
               </div>
             `}
