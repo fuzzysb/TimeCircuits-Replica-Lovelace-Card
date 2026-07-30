@@ -828,7 +828,7 @@ var __decorateClass = (decorators, target, key, kind) => {
   if (kind && result) __defProp(target, key, result);
   return result;
 };
-const VERSION = "1.6.2";
+const VERSION = "1.6.3";
 const CARD_NAME = "time-circuits-card";
 const DSEG7_FONT_FACE_ID = "time-circuits-card-dseg7-font";
 function ensureDseg7Font() {
@@ -968,45 +968,37 @@ let TimeCircuitsCard = class extends i {
     const st = this._state(entityId);
     const parsed = parseTimeState(st == null ? void 0 : st.state);
     const fmt = this._dateFormat();
-    parsed ? toDisplayOrder(parsed.monthDay, fmt) : "";
-    const month = parsed ? parsed.monthDay.slice(0, 2) : "";
-    const day = parsed ? parsed.monthDay.slice(2, 4) : "";
-    const year = parsed ? parsed.year : "";
-    const hour = parsed ? parsed.hourMin.slice(0, 2) : "";
-    const min = parsed ? parsed.hourMin.slice(2, 4) : "";
-    const pad = (s2) => s2.length < 2 ? "0".repeat(2 - s2.length) + s2 : s2;
-    const pad4 = (s2) => s2.length < 4 ? "0".repeat(4 - s2.length) + s2 : s2;
+    const month = parsed ? parsed.monthDay.slice(0, 2) : "01";
+    const day = parsed ? parsed.monthDay.slice(2, 4) : "01";
+    const year = parsed ? parsed.year : "2025";
+    const hour = parsed ? parsed.hourMin.slice(0, 2) : "00";
+    const min = parsed ? parsed.hourMin.slice(2, 4) : "00";
     const isDM = fmt === "DM";
-    const firstLabel = isDM ? "Day (DD)" : "Month (MM)";
-    const secondLabel = isDM ? "Month (MM)" : "Day (DD)";
-    const firstDefault = isDM ? day : month;
-    const secondDefault = isDM ? month : day;
-    const d2 = window.prompt(`${label}
-${firstLabel}`, firstDefault);
-    if (d2 == null) return;
-    const m2 = window.prompt(`${label}
-${secondLabel}`, secondDefault);
-    if (m2 == null) return;
-    const y3 = window.prompt(`${label}
-Year (YYYY)`, year);
-    if (y3 == null) return;
-    const h2 = window.prompt(`${label}
-Hour (HH, 24hr)`, hour);
-    if (h2 == null) return;
-    const mn = window.prompt(`${label}
-Minute (MM)`, min);
-    if (mn == null) return;
-    const dd = pad(d2.trim());
-    const mm = pad(m2.trim());
-    const yy = pad4(y3.trim());
-    const hh = pad(h2.trim());
-    const mi = pad(mn.trim());
-    if (!/^\d{2}$/.test(dd) || !/^\d{2}$/.test(mm) || !/^\d{4}$/.test(yy) || !/^\d{2}$/.test(hh) || !/^\d{2}$/.test(mi)) {
-      window.alert("Invalid input. Please enter numbers only with correct digit counts.");
+    const msg = isDM ? `${label}
+Enter: DD MM YYYY HH MM
+(space-separated, e.g. 26 10 1985 01 20)` : `${label}
+Enter: MM DD YYYY HH MM
+(space-separated, e.g. 10 26 1985 01 20)`;
+    const def = isDM ? `${day} ${month} ${year} ${hour} ${min}` : `${month} ${day} ${year} ${hour} ${min}`;
+    const v2 = window.prompt(msg, def);
+    if (v2 == null) return;
+    const parts = v2.trim().split(/\s+/);
+    if (parts.length !== 5) {
+      window.alert("Please enter exactly 5 values: DD MM YYYY HH MM (space-separated).");
       return;
     }
-    const storedMD = mm + dd;
-    const storedValue = storedMD + yy + hh + mi;
+    const pad = (s2) => s2.length < 2 ? "0".repeat(2 - s2.length) + s2 : s2.slice(-2);
+    const pad4 = (s2) => s2.length < 4 ? "0".repeat(4 - s2.length) + s2 : s2.slice(-4);
+    const dd = pad(parts[0]);
+    const mm = pad(parts[1]);
+    const yy = pad4(parts[2]);
+    const hh = pad(parts[3]);
+    const mi = pad(parts[4]);
+    if (!/^\d{2}$/.test(dd) || !/^\d{2}$/.test(mm) || !/^\d{4}$/.test(yy) || !/^\d{2}$/.test(hh) || !/^\d{2}$/.test(mi)) {
+      window.alert("Invalid input. Please enter numbers only.");
+      return;
+    }
+    const storedValue = mm + dd + yy + hh + mi;
     this._setTimeEntity(entityId, storedValue);
   }
   render() {

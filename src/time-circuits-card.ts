@@ -14,7 +14,7 @@ import {
 } from "./types";
 import "./time-circuits-editor";
 
-const VERSION = "1.6.2";
+const VERSION = "1.6.3";
 
 const CARD_NAME = "time-circuits-card";
 
@@ -182,46 +182,45 @@ export class TimeCircuitsCard extends LitElement {
     const st = this._state(entityId);
     const parsed = parseTimeState(st?.state);
     const fmt = this._dateFormat();
-    const dm = parsed ? toDisplayOrder(parsed.monthDay, fmt) : "";
-    const month = parsed ? parsed.monthDay.slice(0, 2) : "";
-    const day = parsed ? parsed.monthDay.slice(2, 4) : "";
-    const year = parsed ? parsed.year : "";
-    const hour = parsed ? parsed.hourMin.slice(0, 2) : "";
-    const min = parsed ? parsed.hourMin.slice(2, 4) : "";
 
-    const pad = (s: string) => s.length < 2 ? "0".repeat(2 - s.length) + s : s;
-    const pad4 = (s: string) => s.length < 4 ? "0".repeat(4 - s.length) + s : s;
+    const month = parsed ? parsed.monthDay.slice(0, 2) : "01";
+    const day = parsed ? parsed.monthDay.slice(2, 4) : "01";
+    const year = parsed ? parsed.year : "2025";
+    const hour = parsed ? parsed.hourMin.slice(0, 2) : "00";
+    const min = parsed ? parsed.hourMin.slice(2, 4) : "00";
 
     const isDM = fmt === "DM";
-    const firstLabel = isDM ? "Day (DD)" : "Month (MM)";
-    const secondLabel = isDM ? "Month (MM)" : "Day (DD)";
-    const firstDefault = isDM ? day : month;
-    const secondDefault = isDM ? month : day;
+    const msg = isDM
+      ? `${label}\nEnter: DD MM YYYY HH MM\n(space-separated, e.g. 26 10 1985 01 20)`
+      : `${label}\nEnter: MM DD YYYY HH MM\n(space-separated, e.g. 10 26 1985 01 20)`;
+    const def = isDM
+      ? `${day} ${month} ${year} ${hour} ${min}`
+      : `${month} ${day} ${year} ${hour} ${min}`;
 
-    const d = window.prompt(`${label}\n${firstLabel}`, firstDefault);
-    if (d == null) return;
-    const m = window.prompt(`${label}\n${secondLabel}`, secondDefault);
-    if (m == null) return;
-    const y = window.prompt(`${label}\nYear (YYYY)`, year);
-    if (y == null) return;
-    const h = window.prompt(`${label}\nHour (HH, 24hr)`, hour);
-    if (h == null) return;
-    const mn = window.prompt(`${label}\nMinute (MM)`, min);
-    if (mn == null) return;
+    const v = window.prompt(msg, def);
+    if (v == null) return;
 
-    const dd = pad(d.trim());
-    const mm = pad(m.trim());
-    const yy = pad4(y.trim());
-    const hh = pad(h.trim());
-    const mi = pad(mn.trim());
-
-    if (!/^\d{2}$/.test(dd) || !/^\d{2}$/.test(mm) || !/^\d{4}$/.test(yy) || !/^\d{2}$/.test(hh) || !/^\d{2}$/.test(mi)) {
-      window.alert("Invalid input. Please enter numbers only with correct digit counts.");
+    const parts = v.trim().split(/\s+/);
+    if (parts.length !== 5) {
+      window.alert("Please enter exactly 5 values: DD MM YYYY HH MM (space-separated).");
       return;
     }
 
-    const storedMD = mm + dd;
-    const storedValue = storedMD + yy + hh + mi;
+    const pad = (s: string) => s.length < 2 ? "0".repeat(2 - s.length) + s : s.slice(-2);
+    const pad4 = (s: string) => s.length < 4 ? "0".repeat(4 - s.length) + s : s.slice(-4);
+
+    const dd = pad(parts[0]);
+    const mm = pad(parts[1]);
+    const yy = pad4(parts[2]);
+    const hh = pad(parts[3]);
+    const mi = pad(parts[4]);
+
+    if (!/^\d{2}$/.test(dd) || !/^\d{2}$/.test(mm) || !/^\d{4}$/.test(yy) || !/^\d{2}$/.test(hh) || !/^\d{2}$/.test(mi)) {
+      window.alert("Invalid input. Please enter numbers only.");
+      return;
+    }
+
+    const storedValue = mm + dd + yy + hh + mi;
     this._setTimeEntity(entityId, storedValue);
   }
 
