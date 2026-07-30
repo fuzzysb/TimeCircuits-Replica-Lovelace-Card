@@ -828,7 +828,7 @@ var __decorateClass = (decorators, target, key, kind) => {
   if (kind && result) __defProp(target, key, result);
   return result;
 };
-const VERSION = "1.6.0";
+const VERSION = "1.6.1";
 const CARD_NAME = "time-circuits-card";
 const DSEG7_FONT_FACE_ID = "time-circuits-card-dseg7-font";
 function ensureDseg7Font() {
@@ -1029,20 +1029,18 @@ Minute (MM)`, min);
             ${cfg.sync_entity || cfg.date_format_entity ? b`
                   <div class="sync-bar">
                     ${cfg.date_format_entity ? b`
-                          <mwc-button
-                            raised
-                            label=${this._dateFormat() === "DM" ? "DD/MM" : "MM/DD"}
-                            style="--mdc-theme-primary:${theme.accent};--mdc-theme-on-primary:#0a0a0a"
+                          <button
+                            class="tc-btn"
+                            style="background:${theme.accent};color:#0a0a0a"
                             @click=${() => this._handleToggleDateFormat()}
-                          ></mwc-button>
+                          >${this._dateFormat() === "DM" ? "DD/MM" : "MM/DD"}</button>
                         ` : A}
                     ${cfg.sync_entity ? b`
-                          <mwc-button
-                            raised
-                            label="SYNC RTC"
-                            style="--mdc-theme-primary:${theme.accent};--mdc-theme-on-primary:#0a0a0a"
+                          <button
+                            class="tc-btn"
+                            style="background:${theme.accent};color:#0a0a0a"
                             @click=${() => this._handleSync()}
-                          ></mwc-button>
+                          >SYNC RTC</button>
                         ` : A}
                   </div>
                 ` : A}
@@ -1321,6 +1319,21 @@ TimeCircuitsCard.styles = i$3`
       margin-top: calc(6px * var(--scale));
       padding-bottom: calc(2px * var(--scale));
     }
+    .tc-btn {
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: calc(11px * var(--scale));
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      border: none;
+      border-radius: 4px;
+      padding: calc(6px * var(--scale)) calc(14px * var(--scale));
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+      transition: opacity 0.15s;
+    }
+    .tc-btn:hover { opacity: 0.85; }
+    .tc-btn:active { opacity: 0.7; }
   `;
 __decorateClass([
   n2({ attribute: false })
