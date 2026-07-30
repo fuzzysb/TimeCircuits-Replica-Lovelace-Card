@@ -823,8 +823,25 @@ var __decorateClass = (decorators, target, key, kind) => {
   if (kind && result) __defProp(target, key, result);
   return result;
 };
-const VERSION = "1.0.0";
+const VERSION = "1.1.0";
 const CARD_NAME = "time-circuits-card";
+const DSEG7_FONT_FACE_ID = "time-circuits-card-dseg7-font";
+function ensureDseg7Font() {
+  if (document.getElementById(DSEG7_FONT_FACE_ID)) return;
+  const style = document.createElement("style");
+  style.id = DSEG7_FONT_FACE_ID;
+  style.textContent = `
+@font-face {
+  font-family: 'DSEG7 Classic';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('https://cdn.jsdelivr.net/npm/@fontsource/dseg7@4.5.4/files/dseg7-classic-400-normal.woff2') format('woff2'),
+       url('https://cdn.jsdelivr.net/npm/@fontsource/dseg7@4.5.4/files/dseg7-classic-400-normal.woff') format('woff');
+}
+`;
+  document.head.appendChild(style);
+}
 let TimeCircuitsCard = class extends i {
   constructor() {
     super(...arguments);
@@ -852,6 +869,7 @@ let TimeCircuitsCard = class extends i {
   }
   connectedCallback() {
     super.connectedCallback();
+    ensureDseg7Font();
     this._clockTimer = window.setInterval(() => {
       this._clockTick++;
     }, 1e3);
@@ -884,9 +902,7 @@ let TimeCircuitsCard = class extends i {
       }
     }
     const now = /* @__PURE__ */ new Date();
-    let md;
-    if (fmt === "DM") md = pad2(now.getDate()) + pad2(now.getMonth() + 1);
-    else md = pad2(now.getMonth() + 1) + pad2(now.getDate());
+    const md = pad2(now.getMonth() + 1) + pad2(now.getDate());
     const yr = String(now.getFullYear());
     const hm = pad2(now.getHours()) + pad2(now.getMinutes());
     const parsed = { monthDay: md, year: yr, hourMin: hm };
@@ -927,18 +943,23 @@ let TimeCircuitsCard = class extends i {
     if (!entityId || !this.hass) return;
     const st = this._state(entityId);
     const parsed = parseTimeState(st == null ? void 0 : st.state);
-    const initialValue = parsed ? `${parsed.monthDay}${parsed.year}${parsed.hourMin}` : "010120250000";
+    const fmt = this._dateFormat();
+    const initialValue = parsed ? `${toDisplayOrder(parsed.monthDay, fmt)}${parsed.year}${parsed.hourMin}` : "010120250000";
+    const orderLabel = fmt === "DM" ? "DDMMYYYYHHMM" : "MMDDYYYYHHMM";
     const v2 = window.prompt(
       `Set ${label ?? entityId}
-Format: MMDDYYYYHHMM (12 digits)`,
+Format: ${orderLabel} (12 digits)`,
       initialValue
     );
     if (v2 == null) return;
     if (!/^\d{12}$/.test(v2.trim())) {
-      window.alert("Value must be exactly 12 digits: MMDDYYYYHHMM");
+      window.alert(`Value must be exactly 12 digits: ${orderLabel}`);
       return;
     }
-    this._setTimeEntity(entityId, v2.trim());
+    const trimmed = v2.trim();
+    const storedMD = fmt === "DM" ? trimmed.slice(2, 4) + trimmed.slice(0, 2) : trimmed.slice(0, 4);
+    const storedValue = storedMD + trimmed.slice(4);
+    this._setTimeEntity(entityId, storedValue);
   }
   render() {
     const cfg = this._cfg;

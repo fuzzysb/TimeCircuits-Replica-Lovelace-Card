@@ -6,11 +6,15 @@ Designed to pair with an ESP32-based Time Circuits replica that publishes its st
 to Home Assistant over MQTT (auto-discovery). Renders the iconic three-row display:
 
 - **DESTINATION TIME** (top, red LEDs)
-- **PRESENT TIME** (middle, red LEDs)
-- **LAST TIME DEPARTED** (bottom, red LEDs)
+- **PRESENT TIME** (middle, green LEDs)
+- **LAST TIME DEPARTED** (bottom, yellow LEDs)
 
-Each row shows `MMDD`, `YYYY`, and `HHMM` LED segments with AM/PM indicators and a
-SYNC RTC button.
+Each row shows `MMDD` (or `DDMM` when the date-format select is set to `DM`),
+`YYYY`, and `HHMM` LED segments with AM/PM indicators and a SYNC RTC button.
+
+> The card automatically loads the **DSEG7 Classic** 7-segment webfont from a CDN,
+> so the digits render like a real LED display (falls back to a monospace font
+> if the CDN is unreachable).
 
 ## Requirements
 
@@ -50,10 +54,9 @@ type: custom:time-circuits-card
 title: Time Circuits
 destination_entity: text.time_circuits_replica_destination_time
 departed_entity: text.time_circuits_replica_last_time_departed
-present_entity: text.time_circuits_replica_present_time   # optional; falls back to HA server time
+# present_entity: text.time_circuits_replica_present_time   # optional; falls back to HA server time
 date_format_entity: select.time_circuits_replica_date_format
 sync_entity: button.time_circuits_replica_sync_rtc_time
-font_family: "'DSEG7 Classic', 'Courier New', monospace"
 theme:
   background: "#0a0a0a"
   top_color: "#ff2200"
@@ -61,6 +64,11 @@ theme:
   bottom_color: "#ffcc00"
   accent: "#ffb011"
 ```
+
+The entity IDs above are the ones the companion firmware advertises via MQTT
+auto-discovery (see `object_id` in its discovery payloads). The `present_entity`
+is optional — the device's middle row is RTC-driven and not published over MQTT,
+so by default the card shows Home Assistant server time, updated every second.
 
 ### Options
 
@@ -72,7 +80,7 @@ theme:
 | `date_format_entity` | string | Optional `select.*` returning `MD` or `DM`. Controls MMDD vs DDMM display order. |
 | `sync_entity`        | string | Optional `button.*` entity; pressing the card's SYNC RTC button calls `button.press`. |
 | `title`              | string | Optional card title.                                          |
-| `font_family`        | string | CSS `font-family` for the LED digits.                          |
+| `font_family`        | string | CSS `font-family` for the LED digits. Defaults to `'DSEG7 Classic', 'Courier New', monospace`; the DSEG7 font is auto-loaded from a CDN. |
 | `theme`              | object | Optional color overrides (see below).                        |
 
 ### Theme keys
