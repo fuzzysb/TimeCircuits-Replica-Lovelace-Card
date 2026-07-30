@@ -14,7 +14,7 @@ import {
 } from "./types";
 import "./time-circuits-editor";
 
-const VERSION = "1.4.0";
+const VERSION = "1.4.1";
 
 const CARD_NAME = "time-circuits-card";
 
@@ -338,10 +338,10 @@ export class TimeCircuitsCard extends LitElement {
   }
 
   private _panelStyle(): string {
-    const usable = this._cardWidth - 40;
-    const scale = Math.max(0.4, Math.min(1.0, usable / 380));
+    const usable = this._cardWidth - 50;
+    const scale = Math.max(0.35, Math.min(1.0, usable / 440));
     return [
-      `padding:calc(10px * ${scale}) calc(18px * ${scale}) calc(8px * ${scale})`,
+      `padding:calc(10px * ${scale}) calc(14px * ${scale}) calc(8px * ${scale})`,
       `--led-font:${this._cfg.font_family ?? "'DSEG7 Classic', 'Courier New', monospace"}`,
       `--scale:${scale}`,
     ].join(";");
@@ -395,8 +395,6 @@ export class TimeCircuitsCard extends LitElement {
       justify-content: center;
       gap: 0;
       flex-wrap: nowrap;
-      max-width: 100%;
-      overflow: hidden;
     }
     .segments.editable { cursor: pointer; }
     .segments.empty { color: #444; }
@@ -465,9 +463,9 @@ export class TimeCircuitsCard extends LitElement {
     }
     .seg-gap { width: 6px; display: inline-block; }
     .digit {
-      font-size: calc(30px * var(--scale));
+      font-size: calc(28px * var(--scale));
       line-height: 1;
-      min-width: 0.62em;
+      min-width: 0.55em;
       text-align: center;
       text-shadow:
         0 0 5px currentColor,
@@ -476,7 +474,7 @@ export class TimeCircuitsCard extends LitElement {
     }
     .colon {
       font-family: var(--led-font);
-      font-size: calc(30px * var(--scale));
+      font-size: calc(28px * var(--scale));
       line-height: 1;
       padding: 0 calc(2px * var(--scale));
       text-shadow: 0 0 6px currentColor, 0 0 14px currentColor;
