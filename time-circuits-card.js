@@ -1025,6 +1025,9 @@ Minute (MM)`, min);
     const p2 = row.parsed;
     const md = row.displayMD ?? (p2 == null ? void 0 : p2.monthDay);
     const click = editable ? () => this._editRow(entityId, row.label) : void 0;
+    const isDM = this._dateFormat() === "DM";
+    const firstLabel = isDM ? "DAY" : "MONTH";
+    const secondLabel = isDM ? "MONTH" : "DAY";
     return b`
       <div class="row">
         <div
@@ -1032,7 +1035,7 @@ Minute (MM)`, min);
           @click=${click}
         >
           <div class="col col-two">
-            <div class="col-head"><span class="dymo">MONTH</span><span class="dymo">DAY</span></div>
+            <div class="col-head"><span class="dymo">${firstLabel}</span><span class="dymo">${secondLabel}</span></div>
             <div class="col-body">
               ${this._renderPair(md == null ? void 0 : md.slice(0, 2), color)}
               <span class="seg-gap"></span>

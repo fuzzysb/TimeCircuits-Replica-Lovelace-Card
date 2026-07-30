@@ -255,6 +255,9 @@ export class TimeCircuitsCard extends LitElement {
     const p = row.parsed;
     const md = row.displayMD ?? p?.monthDay;
     const click = editable ? () => this._editRow(entityId, row.label) : undefined;
+    const isDM = this._dateFormat() === "DM";
+    const firstLabel = isDM ? "DAY" : "MONTH";
+    const secondLabel = isDM ? "MONTH" : "DAY";
     return html`
       <div class="row">
         <div
@@ -262,7 +265,7 @@ export class TimeCircuitsCard extends LitElement {
           @click=${click}
         >
           <div class="col col-two">
-            <div class="col-head"><span class="dymo">MONTH</span><span class="dymo">DAY</span></div>
+            <div class="col-head"><span class="dymo">${firstLabel}</span><span class="dymo">${secondLabel}</span></div>
             <div class="col-body">
               ${this._renderPair(md?.slice(0, 2), color)}
               <span class="seg-gap"></span>
