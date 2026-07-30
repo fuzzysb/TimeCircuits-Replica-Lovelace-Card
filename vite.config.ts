@@ -7,8 +7,8 @@ export default defineConfig({
       formats: ["es"],
       fileName: () => "time-circuits-card.js",
     },
-    outDir: "dist",
-    emptyOutDir: true,
+    outDir: ".",
+    emptyOutDir: false,
     minify: false,
     rollupOptions: {
       external: /^lit/,

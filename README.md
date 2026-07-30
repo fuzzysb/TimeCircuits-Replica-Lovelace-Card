@@ -27,12 +27,12 @@ SYNC RTC button.
    ```yaml
    resources:
      - type: module
-       url: /hacsfiles/time-circuits-card/dist/time-circuits-card.js
+       url: /hacsfiles/TimeCircuits-Replica-Lovelace-Card/time-circuits-card.js
    ```
 
 ## Manual install
 
-Copy `dist/time-circuits-card.js` to your `config/www/` folder and add it as a
+Copy `time-circuits-card.js` to your `config/www/` folder and add it as a
 Lovelace resource:
 
 ```yaml
@@ -98,7 +98,7 @@ theme:
 
 ```bash
 npm install
-npm run build       # outputs dist/time-circuits-card.js
+npm run build       # outputs time-circuits-card.js at repo root
 npm run dev         # rebuild on save
 npm run typecheck
 ```
