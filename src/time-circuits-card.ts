@@ -58,7 +58,6 @@ export class TimeCircuitsCard extends LitElement {
 
   static getStubConfig(): Partial<TimeCircuitsConfig> {
     return {
-      title: "Time Circuits",
       destination_entity: "text.time_circuits_replica_destination_time",
       departed_entity: "text.time_circuits_replica_last_time_departed",
       date_format_entity: "select.time_circuits_replica_date_format",
@@ -129,8 +128,8 @@ export class TimeCircuitsCard extends LitElement {
   private _rowFromEntity(label: string, entityId?: string): RowModel {
     const st = this._state(entityId);
     const parsed = parseTimeState(st?.state);
+    console.debug(`[time-circuits] ${label} entity=${entityId} state=${JSON.stringify(st?.state)} parsed=${parsed ? "OK" : "FAIL"}`);
     if (!parsed) {
-      console.debug(`[time-circuits] ${label} entity=${entityId} state=${st?.state} -> parse failed`);
       return { label, am: true };
     }
     const fmt = this._dateFormat();
@@ -200,11 +199,6 @@ export class TimeCircuitsCard extends LitElement {
       <ha-card style=${this._cardStyle(theme)}>
         <div class="bezel">
           <div class="panel" style=${this._panelStyle()}>
-            ${cfg.title
-              ? html`<div class="card-title" style="color:${theme.label_color}">
-                  ${cfg.title}
-                </div>`
-              : nothing}
             ${this._renderRow(top, theme, "top", cfg.destination_entity, true)}
             ${this._renderRow(present, theme, "middle", cfg.present_entity, false)}
             ${this._renderRow(bottom, theme, "bottom", cfg.departed_entity, true)}
@@ -403,6 +397,14 @@ export class TimeCircuitsCard extends LitElement {
       display: flex;
       align-items: center;
       gap: 2px;
+      padding: 4px 6px 3px;
+      background: #000;
+      border-radius: 3px;
+      box-shadow:
+        inset 0 0 5px rgba(0,0,0,0.9),
+        inset 0 1px 2px rgba(0,0,0,0.7),
+        0 1px 0 #d0d0d0,
+        0 2px 2px rgba(0,0,0,0.3);
     }
     .led-pair, .led-year {
       display: inline-flex;
