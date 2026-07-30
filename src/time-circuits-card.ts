@@ -238,7 +238,7 @@ export class TimeCircuitsCard extends LitElement {
           @click=${click}
         >
           <div class="col col-two">
-            <div class="col-head"><span>MONTH</span><span>DAY</span></div>
+            <div class="col-head"><span class="dymo">MONTH</span><span class="dymo">DAY</span></div>
             <div class="col-body">
               ${this._renderPair(md?.slice(0, 2), color)}
               <span class="seg-gap"></span>
@@ -246,15 +246,15 @@ export class TimeCircuitsCard extends LitElement {
             </div>
           </div>
           <div class="col col-one">
-            <div class="col-head"><span>YEAR</span></div>
+            <div class="col-head"><span class="dymo">YEAR</span></div>
             <div class="col-body">${this._renderYear(p?.year, color)}</div>
           </div>
           <div class="col col-ampm">
-            <div class="col-head"><span>PM</span><span>AM</span></div>
+            <div class="col-head"><span class="dymo">AM</span><span class="dymo">PM</span></div>
             <div class="col-body">${this._renderAmPm(row.am, color)}</div>
           </div>
           <div class="col col-two">
-            <div class="col-head"><span>HOUR</span><span>MIN</span></div>
+            <div class="col-head"><span class="dymo">HOUR</span><span class="dymo">MIN</span></div>
             <div class="col-body">
               ${this._renderPair(p?.hourMin?.slice(0, 2), color)}
               <span class="colon">:</span>
@@ -262,7 +262,7 @@ export class TimeCircuitsCard extends LitElement {
             </div>
           </div>
         </div>
-        <div class="row-label" style="color:${theme.label_color}">${row.label}</div>
+        <div class="row-label-wrap"><span class="row-label-dymo">${row.label}</span></div>
       </div>
     `;
   }
@@ -284,8 +284,8 @@ export class TimeCircuitsCard extends LitElement {
   private _renderAmPm(am: boolean, color: string): TemplateResult {
     return html`
       <div class="ampm-stack" style="--lamp:${color}">
-        <div class="ampm-lamp ${am ? "off" : "on"}"></div>
         <div class="ampm-lamp ${am ? "on" : "off"}"></div>
+        <div class="ampm-lamp ${am ? "off" : "on"}"></div>
       </div>
     `;
   }
@@ -293,8 +293,8 @@ export class TimeCircuitsCard extends LitElement {
   private _cardStyle(theme: TimeCircuitsTheme): string {
     return [
       `background:${theme.background}`,
-      `border:4px solid ${theme.bezel}`,
-      `border-radius:16px`,
+      `border:6px solid #9a9a9a`,
+      `border-radius:14px`,
       `padding:0`,
       `overflow:hidden`,
     ].join(";");
@@ -302,7 +302,7 @@ export class TimeCircuitsCard extends LitElement {
 
   private _panelStyle(): string {
     return [
-      `padding:14px 16px 10px`,
+      `padding:10px 12px 8px`,
       `--led-font:${this._cfg.font_family ?? "'DSEG7 Classic', 'Courier New', monospace"}`,
     ].join(";");
   }
@@ -336,31 +336,26 @@ export class TimeCircuitsCard extends LitElement {
     .row {
       display: flex;
       flex-direction: column;
-      gap: 4px;
-      padding: 10px 18px 8px;
+      gap: 6px;
+      padding: 10px 10px 8px;
       background: #050505;
       position: relative;
     }
-    .row + .row {
-      border-top: 2px solid #2a2a2a;
-      box-shadow: inset 0 1px 0 0 #3a3a3a;
-    }
-    .row-label {
-      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-      font-size: 9px;
-      letter-spacing: 2.5px;
-      opacity: 0.55;
-      text-transform: uppercase;
-      font-weight: 700;
-      text-align: center;
-      margin-top: 2px;
-    }
+    .row + .row { border-top: 3px solid #6e6e6e; }
     .segments {
       display: flex;
       align-items: flex-end;
       justify-content: center;
-      gap: 14px;
+      gap: 0;
       flex-wrap: nowrap;
+      background:
+        linear-gradient(180deg, #c8c8c8 0%, #9a9a9a 40%, #7e7e7e 100%);
+      padding: 8px 6px;
+      border-radius: 6px;
+      box-shadow:
+        inset 0 1px 0 #e0e0e0,
+        inset 0 -2px 4px rgba(0,0,0,0.4),
+        0 1px 2px rgba(0,0,0,0.5);
     }
     .segments.editable { cursor: pointer; }
     .segments.empty { color: #444; }
@@ -369,31 +364,52 @@ export class TimeCircuitsCard extends LitElement {
       flex-direction: column;
       align-items: center;
       gap: 3px;
+      padding: 0 5px;
+    }
+    .col + .col {
+      border-left: 3px solid #8a8a8a;
+      box-shadow: inset 1px 0 0 #c0c0c0;
     }
     .col-head {
       display: flex;
       justify-content: center;
-      gap: 10px;
+      gap: 3px;
       font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    }
+    .col-ampm .col-head { flex-direction: column; gap: 2px; }
+    .dymo {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #b71c1c;
+      color: #fff;
       font-size: 7px;
-      letter-spacing: 1px;
-      color: #b33a3a;
       font-weight: 700;
+      letter-spacing: 0.5px;
       text-transform: uppercase;
-      opacity: 0.85;
+      padding: 2px 5px;
+      border-radius: 2px;
+      min-width: 2.5em;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.25),
+        inset 0 -1px 0 rgba(0,0,0,0.4),
+        0 1px 1px rgba(0,0,0,0.5);
     }
-    .col-head span { min-width: 2em; text-align: center; }
-    .col-one .col-head span { min-width: 4em; }
-    .col-ampm .col-head {
-      flex-direction: column;
-      gap: 2px;
-    }
-    .col-ampm .col-head span { min-width: 0; }
+    .col-ampm .dymo { min-width: 0; width: 2em; }
+    .col-one .dymo { min-width: 4em; }
     .col-body {
       display: flex;
       align-items: center;
       gap: 2px;
+      padding: 4px 4px 3px;
+      background: #000;
+      border-radius: 3px;
+      box-shadow:
+        inset 0 0 4px rgba(0,0,0,0.9),
+        inset 0 1px 1px rgba(0,0,0,0.8),
+        0 1px 0 #b8b8b8;
     }
+    .col-ampm .col-body { padding: 4px 6px; }
     .led-pair, .led-year {
       display: inline-flex;
       align-items: center;
@@ -402,9 +418,9 @@ export class TimeCircuitsCard extends LitElement {
       font-weight: 400;
       letter-spacing: 1px;
     }
-    .seg-gap { width: 8px; display: inline-block; }
+    .seg-gap { width: 6px; display: inline-block; }
     .digit {
-      font-size: 32px;
+      font-size: 30px;
       line-height: 1;
       min-width: 0.62em;
       text-align: center;
@@ -415,7 +431,7 @@ export class TimeCircuitsCard extends LitElement {
     }
     .colon {
       font-family: var(--led-font);
-      font-size: 32px;
+      font-size: 30px;
       line-height: 1;
       padding: 0 2px;
       text-shadow: 0 0 6px currentColor, 0 0 14px currentColor;
@@ -426,23 +442,47 @@ export class TimeCircuitsCard extends LitElement {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 5px;
-      padding: 2px 0;
+      gap: 6px;
     }
     .ampm-lamp {
-      width: 11px;
-      height: 11px;
+      width: 12px;
+      height: 12px;
       border-radius: 50%;
-      background: #161616;
-      border: 1px solid #333;
+      background: #0a0a0a;
+      border: 2px solid #777;
       box-sizing: border-box;
-      transition: background 0.2s, box-shadow 0.2s;
+      transition: background 0.2s, box-shadow 0.2s, border-color 0.2s;
     }
     .ampm-lamp.on {
       background: var(--lamp);
-      box-shadow: 0 0 5px var(--lamp), 0 0 10px var(--lamp), inset 0 0 2px rgba(255,255,255,0.5);
+      border-color: #aaa;
+      box-shadow:
+        0 0 6px var(--lamp),
+        0 0 12px var(--lamp),
+        inset 0 0 3px rgba(255,255,255,0.6);
     }
-    .ampm-lamp.off { background: #161616; box-shadow: none; }
+    .ampm-lamp.off { background: #0a0a0a; box-shadow: none; }
+    .row-label-wrap {
+      display: flex;
+      justify-content: center;
+      margin-top: 3px;
+    }
+    .row-label-dymo {
+      display: inline-block;
+      background: #111;
+      color: #fff;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      padding: 3px 14px;
+      border-radius: 3px;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.12),
+        inset 0 -1px 0 rgba(0,0,0,0.6),
+        0 1px 2px rgba(0,0,0,0.5);
+    }
     .sync-bar {
       display: flex;
       justify-content: center;
@@ -450,11 +490,11 @@ export class TimeCircuitsCard extends LitElement {
       padding-bottom: 2px;
     }
     @media (max-width: 480px) {
-      .digit { font-size: 24px; }
-      .colon { font-size: 24px; }
-      .segments { gap: 8px; }
-      .row { padding: 8px 10px 6px; }
-      .col-head { font-size: 6px; gap: 6px; }
+      .digit { font-size: 22px; }
+      .colon { font-size: 22px; }
+      .col { padding: 0 3px; }
+      .row { padding: 8px 6px 6px; }
+      .dymo { font-size: 6px; padding: 2px 4px; }
     }
   `;
 }
