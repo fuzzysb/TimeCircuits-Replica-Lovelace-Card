@@ -49,8 +49,10 @@ export class TimeCircuitsCard extends LitElement {
   @property({ attribute: false }) hass?: any;
   @state() private _cfg: TimeCircuitsConfig = {};
   @state() private _clockTick = 0;
+  @state() private _cardWidth = 400;
 
   private _clockTimer?: number;
+  private _resizeObserver?: ResizeObserver;
 
   static getConfigElement() {
     return document.createElement("time-circuits-editor");
@@ -80,10 +82,17 @@ export class TimeCircuitsCard extends LitElement {
     this._clockTimer = window.setInterval(() => {
       this._clockTick++;
     }, 1000);
+    this._resizeObserver = new ResizeObserver((entries) => {
+      for (const e of entries) {
+        this._cardWidth = e.contentRect.width;
+      }
+    });
+    this._resizeObserver.observe(this);
   }
 
   disconnectedCallback() {
     if (this._clockTimer) window.clearInterval(this._clockTimer);
+    if (this._resizeObserver) this._resizeObserver.disconnect();
     super.disconnectedCallback();
   }
 
@@ -329,9 +338,11 @@ export class TimeCircuitsCard extends LitElement {
   }
 
   private _panelStyle(): string {
+    const scale = Math.max(0.45, Math.min(1.3, this._cardWidth / 400));
     return [
-      `padding:10px 12px 8px`,
+      `padding:10px 18px 8px`,
       `--led-font:${this._cfg.font_family ?? "'DSEG7 Classic', 'Courier New', monospace"}`,
+      `--scale:${scale}`,
     ].join(";");
   }
 
@@ -354,8 +365,7 @@ export class TimeCircuitsCard extends LitElement {
       flex-direction: column;
       gap: 0;
       font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-      padding: 8px 6px 6px;
-      container-type: inline-size;
+      padding: calc(8px * var(--scale)) calc(18px * var(--scale)) calc(6px * var(--scale));
     }
     .card-title {
       font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -371,8 +381,8 @@ export class TimeCircuitsCard extends LitElement {
     .row {
       display: flex;
       flex-direction: column;
-      gap: 5px;
-      padding: 6px 4px 5px;
+      gap: calc(5px * var(--scale));
+      padding: calc(6px * var(--scale)) calc(4px * var(--scale)) calc(5px * var(--scale));
       position: relative;
     }
     .row + .row { border-top: 1px solid #606060; }
@@ -389,11 +399,11 @@ export class TimeCircuitsCard extends LitElement {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 3px;
-      padding: 0 8px;
+      gap: calc(3px * var(--scale));
+      padding: 0 calc(8px * var(--scale));
     }
     .col + .col {
-      border-left: 2px solid #787878;
+      border-left: calc(2px * var(--scale)) solid #787878;
       box-shadow: inset 1px 0 0 #b8b8b8;
     }
     .col-head {
@@ -408,11 +418,11 @@ export class TimeCircuitsCard extends LitElement {
       justify-content: center;
       background: #b71c1c;
       color: #fff;
-      font-size: clamp(6px, 1.8cqw, 9px);
+      font-size: calc(7px * var(--scale));
       font-weight: 700;
       letter-spacing: 0.5px;
       text-transform: uppercase;
-      padding: 2px 5px;
+      padding: calc(2px * var(--scale)) calc(5px * var(--scale));
       border-radius: 2px;
       min-width: 2.5em;
       box-shadow:
@@ -424,8 +434,8 @@ export class TimeCircuitsCard extends LitElement {
     .col-body {
       display: flex;
       align-items: center;
-      gap: 2px;
-      padding: 4px 6px 3px;
+      gap: calc(2px * var(--scale));
+      padding: calc(4px * var(--scale)) calc(6px * var(--scale)) calc(3px * var(--scale));
       background: #000;
       border-radius: 3px;
       box-shadow:
@@ -438,7 +448,7 @@ export class TimeCircuitsCard extends LitElement {
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 4px 6px;
+      padding: calc(4px * var(--scale)) calc(6px * var(--scale));
     }
     .led-pair, .led-year {
       display: inline-flex;
@@ -450,7 +460,7 @@ export class TimeCircuitsCard extends LitElement {
     }
     .seg-gap { width: 6px; display: inline-block; }
     .digit {
-      font-size: clamp(14px, 7.5cqw, 42px);
+      font-size: calc(30px * var(--scale));
       line-height: 1;
       min-width: 0.62em;
       text-align: center;
@@ -461,9 +471,9 @@ export class TimeCircuitsCard extends LitElement {
     }
     .colon {
       font-family: var(--led-font);
-      font-size: clamp(14px, 7.5cqw, 42px);
+      font-size: calc(30px * var(--scale));
       line-height: 1;
-      padding: 0 2px;
+      padding: 0 calc(2px * var(--scale));
       text-shadow: 0 0 6px currentColor, 0 0 14px currentColor;
       animation: blink 1s steps(2, start) infinite;
     }
@@ -475,8 +485,8 @@ export class TimeCircuitsCard extends LitElement {
       gap: 3px;
     }
     .ampm-lamp {
-      width: clamp(8px, 3cqw, 16px);
-      height: clamp(8px, 3cqw, 16px);
+      width: calc(12px * var(--scale));
+      height: calc(12px * var(--scale));
       border-radius: 50%;
       background: #2a2a2a;
       border: 2px solid #888;
@@ -502,11 +512,11 @@ export class TimeCircuitsCard extends LitElement {
       background: #111;
       color: #fff;
       font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-      font-size: clamp(7px, 2.3cqw, 11px);
+      font-size: calc(9px * var(--scale));
       font-weight: 700;
       letter-spacing: 2.5px;
       text-transform: uppercase;
-      padding: 3px 14px;
+      padding: calc(3px * var(--scale)) calc(14px * var(--scale));
       border-radius: 3px;
       box-shadow:
         inset 0 1px 0 rgba(255,255,255,0.12),
